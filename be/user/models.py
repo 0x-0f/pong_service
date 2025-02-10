@@ -3,7 +3,7 @@ from django.utils.timezone import now
 
 class Users(models.Model):
 	user_id = models.AutoField(primary_key=True)
-	intra_id = models.CharField(max_length=255, unique=True)
+	user_name = models.CharField(max_length=255, default="")
 	email = models.CharField(max_length=255, default="")
 	verification_code = models.CharField(max_length=6, default="")
 	jwt_token = models.CharField(max_length=255, default="")
