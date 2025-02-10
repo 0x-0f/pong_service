@@ -32,7 +32,7 @@ scope = "openid email profile"
 # URL 인코딩
 encoded_scope = urllib.parse.quote(scope)
 
-class IntraAuthViewSet(viewsets.ModelViewSet):
+class GoogleAuthViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"], url_path="login")
     def login(self, request):
         target_url = (
@@ -73,13 +73,13 @@ class IntraAuthViewSet(viewsets.ModelViewSet):
         except requests.exceptions.RequestException as e:
             return JsonResponse({"error": f"[Failed to fetch user data]: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        intra_id = user_data.get("name") # google 에서 이름 가져오기
+        user_name = user_data.get("name") # google 에서 이름 가져오기
         email = user_data.get("email")
-        if not intra_id:
+        if not user_name:
             return JsonResponse({"error": f"[user data missing]"}, status=status.HTTP_400_BAD_REQUEST)
 
         user_profile, created = Users.objects.update_or_create(
-            intra_id=intra_id,
+            user_name=user_name,
             defaults={
                 # "refresh_token": refresh_token,
                 "access_token": access_token,
@@ -97,12 +97,12 @@ class IntraAuthViewSet(viewsets.ModelViewSet):
         response = redirect(REDIRECT_URI)
         # response.set_cookie('tmp_jwt', tmp_jwt_token)
         response.set_cookie('jwt', jwt_token)
-        print(f"REDIRECT_URI: {REDIRECT_URI}", flush=True)
+        # print(f"REDIRECT_URI: {REDIRECT_URI}", flush=True)
         return response
 
     @action(detail=False, methods=["post"], url_path="verify")
     def verify_code(self, request):
-        print(f"got here", flush = True)
+        # print(f"got here", flush = True)
         code = request.data.get('code')
         if not code:
             return JsonResponse({'error': f"[Verification code is required]"}, status=status.HTTP_400_BAD_REQUEST)
@@ -130,8 +130,8 @@ class IntraAuthViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"], url_path="check_expired")
     def is_expired(self, request):
         jwt_token = request.COOKIES.get('jwt')
-        if not jwt_token:
-            jwt_token = request.COOKIES.get('tmp_jwt')
+        # if not jwt_token:
+        #     jwt_token = request.COOKIES.get('tmp_jwt')
         if not jwt_token:
             return JsonResponse({'error': 'JWT token not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
@@ -144,8 +144,8 @@ class IntraAuthViewSet(viewsets.ModelViewSet):
         else:
             return JsonResponse({'message': 'Token is valid'}, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=["get"], url_path="get_intra_id")
-    def get_intra_id(self, request):
+    @action(detail=False, methods=["get"], url_path="user_info")
+    def user_info(self, request):
         jwt_token = request.COOKIES.get('jwt')
         if not jwt_token:
             return JsonResponse({'error': 'JWT token not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -157,7 +157,10 @@ class IntraAuthViewSet(viewsets.ModelViewSet):
         if not user:
             return JsonResponse({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         else:
-            return JsonResponse({'intra_id': user.intra_id}, status=status.HTTP_200_OK)
+            return JsonResponse({
+                'user_id': user.user_id,
+                'user_name': user.user_name
+            }, status=status.HTTP_200_OK)
 
 def send_and_save_verification_code(user):
     RANDOM_STRING_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
