@@ -33,10 +33,6 @@ const routes = {
         },
         'online': {
             '2p': () => import('./pages/game/online/2p.js').then(module => module.render(app, navigate)),
-            // '2p': {
-            //     'waiting_room': () => import('./pages/game/online/waiting_room.js').then(module => module.render(app, navigate)),
-            //     'game': () => import('./pages/game/online/2p.js').then(module => module.render(app, navigate)),
-            // },
         },
     },
     'log': {
