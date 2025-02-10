@@ -1,0 +1,65 @@
+services:
+  be:
+    build:
+      context: be
+      dockerfile: dockerfile
+    container_name: be
+    env_file:
+      - be/.env
+    ports:
+      - "8081:8081"
+    working_dir: /app
+    volumes:
+      - ./be:/app
+    networks:
+      - nw
+    depends_on:
+      - db
+
+  fe:
+    build:
+      context: fe
+      dockerfile: Dockerfile
+    container_name: fe
+    env_file:
+      - fe/.env
+    ports:
+      - "5173:5173"
+    working_dir: /app
+    volumes:
+      - ./fe:/app
+    networks:
+      - nw
+
+  db:
+    image: postgres:latest
+    container_name: db
+    env_file:
+      - be/.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - nw
+
+  nginx:
+    build:
+      context: nginx
+      dockerfile: dockerfile
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - nw
+    depends_on:
+      - fe
+      - be
+
+volumes:
+  postgres_data:
+
+networks:
+  nw:
+    driver: bridge
