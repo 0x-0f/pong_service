@@ -28,8 +28,9 @@ export function renderHeader(header, navigate) {
                 navigate('login');
             }
         });
+        // if response.status === 404(if token doesn't exist), do nothing
     
-        fetch('/api/auth/get_intra_id/', {
+        fetch('/api/auth/user_info/', {
             credentials: 'include',
         }).then(response => {
             if (response.ok) {
@@ -40,9 +41,9 @@ export function renderHeader(header, navigate) {
             if (divElement && divElement.querySelector('p')) {
                 return;
             }
-            const intraId = data.intra_id;
+            const userName = data.user_name;
             const uidElement = document.createElement('p');
-            uidElement.textContent = intraId;
+            uidElement.textContent = userName;
             document.querySelector('.uid').append(uidElement);
         });
     }

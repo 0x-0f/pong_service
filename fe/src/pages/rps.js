@@ -3,7 +3,7 @@ import rock from '/assets/rock.png';
 import paper from '/assets/paper.png';
 import scissors from '/assets/scissors.png';
 
-let intraId = null;
+let userID = null;
 let wss = null;
 let matchWss = null;
 let choice = "";
@@ -31,14 +31,14 @@ function renderStartPage(app, navigate) {
     startBtn.classList.add("btn", "btn-primary", "rps-btn");
 
     startBtn.addEventListener("click", () => {
-        fetch('/api/auth/get_intra_id/', {
+        fetch('/api/auth/user_info', {
             credentials: 'include',
         }).then(response => {
             if (response.ok) {
                 return response.json();
             }
         }).then(data => {
-            intraId = data.intra_id;
+            userID = data.user_id;
             startMatching(app, navigate);
         })
     });
@@ -197,7 +197,7 @@ function renderResultPage(app, navigate, result, opponentChoice, opponentId) {
     myPaddle.className = "rps-my-paddle";
 
     const myIdDiv = document.createElement("div");
-    myIdDiv.textContent = intraId;
+    myIdDiv.textContent = userID;
 
     const myImg = document.createElement("img");
     myImg.className = "rps-img";
@@ -268,7 +268,7 @@ function case_draw(app, navigate) {
 
 function startMatching(app, navigate) {
     renderMatchingPage(app);
-    wss = new WebSocket(`wss://${window.location.hostname}/ws/rps/join/${intraId}`);
+    wss = new WebSocket(`wss://${window.location.hostname}/ws/rps/join/${userID}`);
     wss.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.match_url) {
@@ -292,7 +292,7 @@ function connectMatchWebSocket(app, navigate, matchUrl) {
     const splitted = matchUrl.split("/");
     const matchName = splitted[splitted.length - 2];
     
-    matchWss = new WebSocket(`wss://${window.location.hostname}${matchUrl}${intraId}`);
+    matchWss = new WebSocket(`wss://${window.location.hostname}${matchUrl}${userID}`);
     matchWss.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.status === "start") {
@@ -352,9 +352,9 @@ function getOpponentIdFromMatchName(matchName) {
     // matchName 예: "sungmiki_junmoon"
     const splitted = matchName.split("_");  // ["sungmiki", "junmoon"]
 
-    // 전역변수 intraId(내 아이디)와 다른 쪽이 상대방 아이디
+    // 전역변수 userID(내 아이디)와 다른 쪽이 상대방 아이디
     // Array.splitted(() =>{}) 는 Array의 요소 중 함수의 조건을 만족하는 첫번째 요소를 반환
-    const opponent = splitted.find((id) => id !== intraId);
+    const opponent = splitted.find((id) => id !== userID);
     return opponent || "UnknownOpponent";
 }
 
