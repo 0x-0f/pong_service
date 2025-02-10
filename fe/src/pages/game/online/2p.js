@@ -141,7 +141,7 @@ function gameRoom(app, match_url, me) {
 export function render(app, navigate) {
     waitingRoom(app);
 
-    let intraId; // To store the fetched intra ID
+    let userID = null; // To store the fetched intra ID
 
     // Fetch intra ID from the API
     fetch(`https://${window.location.hostname}/api/auth/get_intra_id/`, {
@@ -154,17 +154,17 @@ export function render(app, navigate) {
             throw new Error('Failed to fetch intra_id');
         })
         .then(data => {
-            intraId = data.intra_id;
+            userID = data.user_id;
 
             // Dynamically determine the WebSocket protocol based on the current protocol
-            wss = new WebSocket(`wss://${window.location.hostname}/ws/pong/join/${intraId}`);
+            wss = new WebSocket(`wss://${window.location.hostname}/ws/pong/join/${userID}`);
 
             wss.onmessage = function (e) {
                 const data = JSON.parse(e.data);
                 const match_url = data.match_url;
 
                 // Transition to the game room
-                gameRoom(app, match_url, intraId);
+                gameRoom(app, match_url, userID);
             };
 
             wss.onerror = function (e) {
