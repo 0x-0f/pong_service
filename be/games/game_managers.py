@@ -11,7 +11,7 @@ class PongGameManager:
 			"player1": "off",
 			"player2": "off",
 		}
-		self.players_intra = {
+		self.players_user_id = {
 			"player1": "",
 			"player2": "",
 		}
@@ -138,14 +138,14 @@ class PongGameManager:
 			status = "finished"
 
 		if self.scores[0] > self.scores[1]: # 누가 승/패 인지 판정
-			winner_intra = self.players_intra["player1"]
-			loser_intra = self.players_intra["player2"]
+			winner_user_id = self.players_user_id["player1"]
+			loser_user_id = self.players_user_id["player2"]
 		else:
-			loser_intra = self.players_intra["player1"]
-			winner_intra = self.players_intra["player2"]
+			loser_user_id = self.players_user_id["player1"]
+			winner_user_id = self.players_user_id["player2"]
 
-		winner = await sync_to_async(Users.objects.get)(intra_id=winner_intra)  # 데이터베이스에 저장하기 위해 users 객체 가져오기
-		loser = await sync_to_async(Users.objects.get)(intra_id=loser_intra)  # 데이터베이스에 저장하기 위해 users 객체 가져오기
+		winner = await sync_to_async(Users.objects.get)(user_id=winner_user_id)  # 데이터베이스에 저장하기 위해 users 객체 가져오기
+		loser = await sync_to_async(Users.objects.get)(user_id=loser_user_id)  # 데이터베이스에 저장하기 위해 users 객체 가져오기
 
 		game = await sync_to_async(PongGame.objects.create)(  # 데이터 베이스에 저장하기 위해 ponggame 객체 가져오기
 			status=status,
@@ -165,7 +165,7 @@ class PongGameManager:
 class RPSGameManager:
 	def __init__(self):
 		self.connection = {}
-		self.intra_id = {}
+		self.user_id = {}
 		self.choice = {}
 		self.result = {}
 		self.status = "waiting"
@@ -212,8 +212,8 @@ class RPSGameManager:
 			self.result["player2"] = "win"
 
 	async def finish_game(self):  # 경기 끝내고 결과 저장하기
-		player1 = await sync_to_async(Users.objects.get)(intra_id=self.intra_id["player1"])  # 플레이어 유저객체 가져오기
-		player2 = await sync_to_async(Users.objects.get)(intra_id=self.intra_id["player2"])  # 플레이어 유저객체 가져오기
+		player1 = await sync_to_async(Users.objects.get)(user_id=self.user_id["player1"])  # 플레이어 유저객체 가져오기
+		player2 = await sync_to_async(Users.objects.get)(user_id=self.user_id["player2"])  # 플레이어 유저객체 가져오기
 
 		result = f"player1 {self.result['player1']}, player2 {self.result['player2']}"
 
