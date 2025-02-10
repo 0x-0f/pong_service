@@ -146,7 +146,7 @@ API_SECRET = config("API_SECRET", default="")
 
 BASE_URL = config("BASE_URL", default="")
 
-REDIRECT_URI = config("BASE_URL", default="") + "/2fa"
+REDIRECT_URI = config("BASE_URL", default="") + "/main"
 AUTH_URL=config("AUTH_URL", default="")
 TOKEN_URL=config("TOKEN_URL", default="")
 API_BASE_URL=config("API_BASE_URL", default="")

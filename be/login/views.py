@@ -13,6 +13,8 @@ from django.utils.http import urlencode
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 
+import urllib.parse
+
 from user.models import Users
 
 CALLBACK_URI = settings.BASE_URL + "/api/auth/callback"
@@ -24,10 +26,23 @@ API_BASE_URL = settings.API_BASE_URL
 CLIENT_UID = settings.API_UID
 CLIENT_SECRET = settings.API_SECRET
 
+STATE = "random_secure_string"
+
+scope = "openid email profile"
+# URL 인코딩
+encoded_scope = urllib.parse.quote(scope)
+
 class IntraAuthViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"], url_path="login")
     def login(self, request):
-        target_url = f"{AUTH_URL}?client_id={CLIENT_UID}&redirect_uri={CALLBACK_URI}&response_type=code"
+        target_url = (
+            f"{AUTH_URL}?"
+            f"client_id={CLIENT_UID}&"
+            f"redirect_uri={CALLBACK_URI}&"
+            f"response_type=code&"
+            f"scope={encoded_scope}&"
+            f"state={STATE}"
+        )
         return redirect(target_url)
 
     @action(detail=False, methods=["get"], url_path="callback")
@@ -44,7 +59,7 @@ class IntraAuthViewSet(viewsets.ModelViewSet):
         }
         token_response = requests.post(TOKEN_URL, data=token_data).json()
         access_token = token_response.get("access_token")
-        refresh_token = token_response.get("refresh_token")
+        # refresh_token = token_response.get("refresh_token") # google 에서 refresh_token을 받기위해서는 따로 설정이 필요함
 
         if not access_token:
             return JsonResponse({'error': f"[Access token missing]"}, status=status.HTTP_400_BAD_REQUEST)
@@ -52,13 +67,13 @@ class IntraAuthViewSet(viewsets.ModelViewSet):
         headers = {"Authorization": f"Bearer {access_token}"}
 
         try:
-            user_response = requests.get(f"{API_BASE_URL}me", headers=headers)
+            user_response = requests.get(f"{API_BASE_URL}", headers=headers)
             user_response.raise_for_status()
             user_data = user_response.json()
         except requests.exceptions.RequestException as e:
             return JsonResponse({"error": f"[Failed to fetch user data]: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        intra_id = user_data.get("login")
+        intra_id = user_data.get("name") # google 에서 이름 가져오기
         email = user_data.get("email")
         if not intra_id:
             return JsonResponse({"error": f"[user data missing]"}, status=status.HTTP_400_BAD_REQUEST)
@@ -66,20 +81,22 @@ class IntraAuthViewSet(viewsets.ModelViewSet):
         user_profile, created = Users.objects.update_or_create(
             intra_id=intra_id,
             defaults={
-                "refresh_token": refresh_token,
+                # "refresh_token": refresh_token,
                 "access_token": access_token,
                 "email": email,
             }
         )
 
         try:
-            jwt_token = create_jwt_token(user_profile, settings.JWT_SECRET_KEY, 180)
+            # tmp_jwt_token = create_jwt_token(user_profile, settings.JWT_SECRET_KEY, 180)
+            jwt_token = create_jwt_token(user_profile, settings.JWT_SECRET_KEY, 3 * 24 * 60 * 60)
         except Exception as e:
             return JsonResponse({"error": f"[Failed to create JWT token]: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        send_and_save_verification_code(user_profile)
+        # send_and_save_verification_code(user_profile)
 
         response = redirect(REDIRECT_URI)
-        response.set_cookie('tmp_jwt', jwt_token)
+        # response.set_cookie('tmp_jwt', tmp_jwt_token)
+        response.set_cookie('jwt', jwt_token)
         print(f"REDIRECT_URI: {REDIRECT_URI}", flush=True)
         return response
 
