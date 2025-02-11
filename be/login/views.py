@@ -161,6 +161,23 @@ class GoogleAuthViewSet(viewsets.ModelViewSet):
                 'user_id': user.user_id,
                 'user_name': user.user_name
             }, status=status.HTTP_200_OK)
+        
+    @action(detail=False, methods=["get"], url_path="user_name") #google에서 이름 수정상황을 확인하는 코드 추가하기
+    def user_name(self, request):
+        jwt_token = request.COOKIES.get('jwt')
+        if not jwt_token:
+            return JsonResponse({'error': 'JWT token not found'}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            payload = jwt.decode(jwt_token, settings.JWT_SECRET_KEY, algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            return JsonResponse({'error': 'Token is expired'}, status=status.HTTP_400_BAD_REQUEST)
+        user = Users.objects.get(email=payload.get('user_email'))
+        if not user:
+            return JsonResponse({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return JsonResponse({
+                'user_name': user.user_name
+            }, status=status.HTTP_200_OK)
 
 def send_and_save_verification_code(user):
     RANDOM_STRING_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
