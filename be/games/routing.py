@@ -8,3 +8,4 @@ websocket_urlpatterns = [
     path('ws/rps/match/<str:match_name>/<int:user_id>', RPSMatchConsumer.as_asgi()),
     path('ws/rps/match/<str:match_name>/<int:user_id>/re', RPSMatchConsumer.as_asgi()),
 ]
+

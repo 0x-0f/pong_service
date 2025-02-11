@@ -92,7 +92,7 @@ class PongMatchConsumer(AsyncWebsocketConsumer):
 	async def connect(self):
 		global pong_game_rooms
 		self.match_name = self.scope['url_route']['kwargs']['match_name']  # URL에서 게임방 이름 가져오기
-		self.user_id = self.scope['url_route']['kwargs']['user_id']  # URL에서 intra id 가져오기
+		self.user_id = str(self.scope['url_route']['kwargs']['user_id'])  # URL에서 intra id 가져오기
 
 		await self.accept()  # 웹소켓 연결 수락
 
@@ -107,7 +107,7 @@ class PongMatchConsumer(AsyncWebsocketConsumer):
 
 		async with asyncio.Lock():  # lock 걸고 내 상태를 off->on 으로 활성화
 			pong_game_rooms[self.match_name].players_connection[self.role] = "on"
-			pong_game_rooms[self.match_name].players_intra[self.role] = self.user_id
+			pong_game_rooms[self.match_name].players_user_id[self.role] = self.user_id
 
 		async with asyncio.Lock():  # 락걸고 두명 모두 on 이면 게임 시작
 			if pong_game_rooms[self.match_name].players_connection["player1"] == "on" and pong_game_rooms[self.match_name].players_connection["player2"] == "on":
@@ -232,7 +232,6 @@ class RPSMatchConsumer(AsyncWebsocketConsumer):
 		self.match_name = self.scope['url_route']['kwargs']['match_name']  # URL에서 게임방 이름 가져오기
 		self.user_id = str(self.scope['url_route']['kwargs']['user_id'])
 		self.is_rematch = self.path.endswith("/re") # 재경기인지 확인
-		print(self.is_rematch)
 
 		await self.accept()  # 웹소켓 연결 수락
 
