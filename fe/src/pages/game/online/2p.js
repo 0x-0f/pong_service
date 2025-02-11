@@ -11,7 +11,7 @@ function waitingRoom(app) {
     `
 }
 
-function gameRoom(app, match_url, me) {
+function gameRoom(app, match_url, userID, userName) {
     app.innerHTML = `
     <canvas id="pongCanvas" width="800px" height="600px" style="border: 1px solid #FFF">
     Your browser does not support this game.
@@ -23,12 +23,29 @@ function gameRoom(app, match_url, me) {
     </div>
     `;
 
-    wss = new WebSocket(`wss://${window.location.hostname}${match_url}${me}`);
+    wss = new WebSocket(`wss://${window.location.hostname}${match_url}${userID}`);
 
     let gameState;
 
     const parts = match_url.split('/');
     const lastPart = parts[parts.length - 2];
+    for(let i = 0; i < parts.length; i++) {
+        if (parts[i] === userID) {
+            parts[i] = userName;
+        }
+        else {
+            fetch(`/api/users/${userID}`, {
+                credentials: 'include',
+            }).then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+            }).then(data => {
+                parts[i] = data.user_name;
+            });
+        }
+    }
+
     const [leftUser, rightUser] = lastPart.split('_');
 
 	wss.onmessage = function(e) {
@@ -141,20 +158,22 @@ function gameRoom(app, match_url, me) {
 export function render(app, navigate) {
     waitingRoom(app);
 
-    let userID = null; // To store the fetched intra ID
+    let userID = null; // To store the fetched user ID
+    let userName = null; // To store the fetched user name
 
-    // Fetch intra ID from the API
-    fetch(`https://${window.location.hostname}/api/auth/get_intra_id/`, {
+    // Fetch user name from the API
+    fetch(`https://${window.location.hostname}/api/auth/user_info/`, {
         credentials: 'include',
     })
         .then(response => {
             if (response.ok) {
                 return response.json();
             }
-            throw new Error('Failed to fetch intra_id');
+            throw new Error('Failed to fetch user_info');
         })
         .then(data => {
             userID = data.user_id;
+            userName = data.user_name;
 
             // Dynamically determine the WebSocket protocol based on the current protocol
             wss = new WebSocket(`wss://${window.location.hostname}/ws/pong/join/${userID}`);
@@ -164,7 +183,7 @@ export function render(app, navigate) {
                 const match_url = data.match_url;
 
                 // Transition to the game room
-                gameRoom(app, match_url, userID);
+                gameRoom(app, match_url, userID, userName);
             };
 
             wss.onerror = function (e) {

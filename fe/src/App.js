@@ -29,7 +29,6 @@ const routes = {
         'offline': {
             'ai': () => import('./pages/game/offline/ai.js').then(module => module.render(app, navigate)),
             '2p': () => import('./pages/game/offline/2p.js').then(module => module.render(app, navigate)),
-            // '4p': () => import('./pages/game/offline/4p.js').then(module => module.render(app, navigate)),
         },
         'online': {
             '2p': () => import('./pages/game/online/2p.js').then(module => module.render(app, navigate)),
