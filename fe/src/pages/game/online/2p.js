@@ -181,7 +181,7 @@ export function render(app, navigate) {
             wss.onmessage = function (e) {
                 const data = JSON.parse(e.data);
                 const match_url = data.match_url;
-
+                console.log('Match URL:', match_url);
                 // Transition to the game room
                 gameRoom(app, match_url, userID, userName);
             };
@@ -191,7 +191,7 @@ export function render(app, navigate) {
             };
         })
         .catch(error => {
-            console.error('Error fetching intra ID:', error);
+            console.error('Error fetching user_info:', error);
         });
 }
 

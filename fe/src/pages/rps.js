@@ -32,14 +32,14 @@ function renderStartPage(app, navigate) {
     startBtn.classList.add("btn", "btn-primary", "rps-btn");
 
     startBtn.addEventListener("click", () => {
-        fetch('/api/auth/user_info/', {
+        fetch('/api/auth/user_info', {
             credentials: 'include',
         }).then(response => {
             if (response.ok) {
                 return response.json();
             }
         }).then(data => {
-            userID = data.user_id;
+            userID = String(data.user_id);
             userName = data.user_name;
             startMatching(app, navigate);
         })
@@ -132,8 +132,8 @@ function renderRpsGamePage(app) {
     app.appendChild(gridContainer);
     app.appendChild(warningText);
 
-    // 6) 10초 카운트다운
-    let count = 10;
+    // 6) 5초 카운트다운
+    let count = 5;
     countdownInterval = setInterval(() => {
         count--;
         counterDiv.textContent = String(count);
@@ -165,7 +165,7 @@ function renderWaitingResultPage(app) {
 }
 
 /** 5) 최종 결과 화면 */
-function renderResultPage(app, navigate, result, opponentChoice, opponentId) {
+function renderResultPage(app, navigate, result, opponentChoice, opponentName) {
     app.innerHTML = "";
 
     // 결과 문구
@@ -218,7 +218,7 @@ function renderResultPage(app, navigate, result, opponentChoice, opponentId) {
     oppImg.src = getImagePath(opponentChoice);
 
     const oppIdDiv = document.createElement("div");
-    oppIdDiv.textContent = opponentId;
+    oppIdDiv.textContent = opponentName;
 
     const oppPaddle = document.createElement("div");
     oppPaddle.className = "rps-opp-paddle";
@@ -282,7 +282,7 @@ function startMatching(app, navigate) {
     wss.onerror = (err) => console.error("[Matching WSS] Error:", err);
 }
 
-function connectMatchWebSocket(app, navigate, matchUrl, rematch) {
+async function connectMatchWebSocket(app, navigate, matchUrl, rematch) {
     app.innerHTML = "";
 
     const waitingText = document.createElement("div");
@@ -295,7 +295,7 @@ function connectMatchWebSocket(app, navigate, matchUrl, rematch) {
     const matchName = splitted[splitted.length - 2];
     
     matchWss = new WebSocket(`wss://${window.location.hostname}${matchUrl}${userID}${rematch}`);
-    matchWss.onmessage = (event) => {
+    matchWss.onmessage = async (event) => {
         const data = JSON.parse(event.data);
         if (data.status === "start") {
             renderRpsGamePage(app);
@@ -312,9 +312,9 @@ function connectMatchWebSocket(app, navigate, matchUrl, rematch) {
                 });
         }
         else if (data.status === "finished") {
-
-            const opponentId = getOpponentNameFromMatchName(matchName);
-            renderResultPage(app, navigate, data.result, data.opponent_choice, opponentId);
+            // const opponentName = getOpponentNameFromMatchName(matchName);
+            const opponentName = await getOpponentNameFromMatchName(matchName);
+            renderResultPage(app, navigate, data.result, data.opponent_choice, opponentName);
             cleanupAllWebSockets();
         }
     };
@@ -351,28 +351,48 @@ function cleanupWss(socket) {
     socket.close();
 }
 
-function getOpponentNameFromMatchName(matchName) {
-    // matchName 예: "sungmiki_junmoon"
-    const parts = matchName.split("_");  // ["sungmiki", "junmoon"]
-    for(let i = 0; i < parts.length; i++) {
-        if (parts[i] === userID) {
-            parts[i] = userName;
-        }
-        else {
-            fetch(`/api/users/${userID}`, {
-                credentials: 'include',
-            }).then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-            }).then(data => {
-                parts[i] = data.user_name;
-            });
-        }
+// function getOpponentNameFromMatchName(matchName) {
+//     // matchName 예: "1_2" "donglee2_sungmikí"
+//     const parts = matchName.split("_");  // ["1", "2"]
+//     let opponentName = null;
+//     for(let i = 0; i < parts.length; i++) {
+//         if (parts[i] !== userID) {
+//             fetch(`/api/users/${userID}`, {
+//                 credentials: 'include',
+//             }).then(response => {
+//                 if (response.ok) {
+//                     return response.json();
+//                 }
+//             }).then(data => {
+//                 console.log("data.user_name: " + data.user_name);
+//                 opponentName = data.user_name; // ["donglee2"]
+                
+//             });
+//         }
+//     }
+//     console.log("opponentName: " + opponentName);
+//     if (opponentName) {
+//         return opponentName;
+//     }
+//     return  "UnknownOpponent";
+// }
+
+// async/await 적용
+async function getOpponentNameFromMatchName(matchName) {
+    const parts = matchName.split("_");
+    // 내 ID가 아닌 것(즉, 상대방 ID)을 찾는다
+    const opponentId = parts.find(id => id !== userID);
+    
+    // 비동기 통신으로 상대방 정보 가져옴
+    const response = await fetch(`/api/users/${opponentId}`, {
+        credentials: 'include'
+    });
+    
+    if (!response.ok) {
+        return "UnknownOpponent";
     }
-    // Array.splitted(() =>{}) 는 Array의 요소 중 함수의 조건을 만족하는 첫번째 요소를 반환
-    const opponent = parts.find((name) => name !== userName);
-    return opponent || "UnknownOpponent";
+    const data = await response.json();
+    return data.user_name;
 }
 
 function getImagePath(item) {
