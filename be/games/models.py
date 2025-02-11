@@ -20,6 +20,7 @@ class RPSGame(models.Model):
     created_date = models.DateTimeField(default=now)
     status = models.CharField(max_length=255, default="")
     result = models.CharField(max_length=255, default="")
+    rematch = models.BooleanField(default=False)
     player1 = models.ForeignKey(Users, related_name='player1', on_delete=models.SET_NULL, null=True, blank=True)
     player2 = models.ForeignKey(Users, related_name='player2', on_delete=models.SET_NULL, null=True, blank=True)
     player1_choice = models.CharField(max_length=255, default="")

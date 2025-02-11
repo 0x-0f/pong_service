@@ -227,8 +227,12 @@ class RPSQueueConsumer(AsyncWebsocketConsumer):
 class RPSMatchConsumer(AsyncWebsocketConsumer):
 	async def connect(self):
 		global rps_game_rooms
+		self.path = self.scope["path"]
+		print(self.path)
 		self.match_name = self.scope['url_route']['kwargs']['match_name']  # URL에서 게임방 이름 가져오기
 		self.user_id = str(self.scope['url_route']['kwargs']['user_id'])
+		self.is_rematch = self.path.endswith("/re") # 재경기인지 확인
+		print(self.is_rematch)
 
 		await self.accept()  # 웹소켓 연결 수락
 
@@ -250,6 +254,9 @@ class RPSMatchConsumer(AsyncWebsocketConsumer):
 			length = len(rps_game_rooms[self.match_name].connection)
 		if length == 2:
 			await rps_game_rooms[self.match_name].change_status("playing")
+		
+		if self.is_rematch == True:
+			await rps_game_rooms[self.match_name].is_rematch()
 
 		self.timer = 0.0
 		self.running_task = asyncio.create_task(self.send_status())
