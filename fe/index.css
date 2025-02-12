@@ -102,6 +102,22 @@ body {
   cursor: pointer;
 }
 
+.grid-item-right-transparent {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 0.6em solid #fff;
+    font-size: 1.5em;
+    padding: 1em;
+    opacity: 0;
+}
+
+.grid-item-right-transparent:hover {
+    background-color: darkgray;
+    cursor: pointer;
+    opacity: 0.07;
+}
+
 .page-container {
   text-align: center;
 }
@@ -167,4 +183,13 @@ body {
 .right-tab {
   border-right: 0.6em solid #fff;
   align-items: flex-end;
+}
+
+.main-btn {
+    background-color: transparent;
+    color: rgb(255, 255, 255);
+    padding: 16px;
+    font-size: 32px;
+    border: none;
+    cursor: pointer;
 }
