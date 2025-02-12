@@ -11,7 +11,20 @@ function waitingRoom(app) {
     `
 }
 
-function gameRoom(app, match_url, userID, userName) {
+async function gameRoom(app, match_url, userID, userName) {
+    document.addEventListener("keydown", function (e) {
+    if (!wss) return;
+
+    // w -> 위로 이동, s -> 아래로 이동
+    if (e.key === "w" || e.key === "ArrowUp") {
+        // {"move":["up"]} 전송
+        wss.send(JSON.stringify({ "move" : "up" }));
+    } else if (e.key === "s" || e.key === "ArrowDown") {
+        // {"move":["down"]} 전송
+        wss.send(JSON.stringify({ "move" : "down" }));
+    }
+    });
+
     app.innerHTML = `
     <canvas id="pongCanvas" width="800px" height="600px" style="border: 1px solid #FFF">
     Your browser does not support this game.
@@ -22,30 +35,34 @@ function gameRoom(app, match_url, userID, userName) {
     <h1 id="right-score">0</h1>
     </div>
     `;
-
+    
     wss = new WebSocket(`wss://${window.location.hostname}${match_url}${userID}`);
-
+    
     let gameState;
-
+    
     const parts = match_url.split('/');
-    const lastPart = parts[parts.length - 2];
-    for(let i = 0; i < parts.length; i++) {
-        if (parts[i] === userID) {
-            parts[i] = userName;
-        }
-        else {
-            fetch(`/api/users/${userID}`, {
+    let lastPart = parts[parts.length - 2];
+    // console.log(`lastPart: ${lastPart}`);
+    const splits = lastPart.split('_');
+    for (let i = 0; i < splits.length; i++) {
+        if (splits[i] === userID) {
+            splits[i] = userName;
+        } else {
+            const response = await fetch(`/api/users/${splits[i]}`, {
                 credentials: 'include',
-            }).then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-            }).then(data => {
-                parts[i] = data.user_name;
-            });
+            })
+            if (!response.ok) {
+                throw new Error('Failed to fetch user info');
+            }
+            const data = await response.json();
+            splits[i] = data.user_name;
         }
+        // console.log(`i: ${i}, splits[i]: ${splits[i]}`);
     }
-
+    lastPart = splits.join('_');
+    // console.log(`lastPart: ${lastPart}`);
+    
+    
     const [leftUser, rightUser] = lastPart.split('_');
 
 	wss.onmessage = function(e) {
@@ -77,10 +94,11 @@ function gameRoom(app, match_url, userID, userName) {
                 window.location.href = '/main';
             });
         }
-		drawGameState(gameState);
+		drawGameState(gameState, leftUser, rightUser);
 	}
 
-	function drawGameState(gameState) {
+	function drawGameState(gameState, leftUser, rightUser) {
+        console.log('drawGameState');
 		if (!gameState) return;
 		const canvas = document.getElementById('pongCanvas');
   		const ctx = canvas.getContext('2d');
@@ -108,9 +126,9 @@ function gameRoom(app, match_url, userID, userName) {
 			100
 		);
 
-        const parts = match_url.split('/');
-        const lastPart = parts[parts.length - 2];
-        const [leftUser, rightUser] = lastPart.split('_');
+        // const parts = match_url.split('/');
+        // const lastPart = parts[parts.length - 2];
+        // const [leftUser, rightUser] = lastPart.split('_');
 
 		ctx.fillStyle = 'white';
 		ctx.font = '20px DOSGothic';
@@ -141,18 +159,7 @@ function gameRoom(app, match_url, userID, userName) {
         });
     }
 
-    document.addEventListener("keydown", function (e) {
-        if (!wss) return;
 
-        // w -> 위로 이동, s -> 아래로 이동
-        if (e.key === "w" || e.key === "ArrowUp") {
-          // {"move":["up"]} 전송
-          wss.send(JSON.stringify({ "move" : "up" }));
-        } else if (e.key === "s" || e.key === "ArrowDown") {
-          // {"move":["down"]} 전송
-          wss.send(JSON.stringify({ "move" : "down" }));
-        }
-    });
 }
 
 export function render(app, navigate) {
@@ -181,7 +188,7 @@ export function render(app, navigate) {
             wss.onmessage = function (e) {
                 const data = JSON.parse(e.data);
                 const match_url = data.match_url;
-                console.log('Match URL:', match_url);
+
                 // Transition to the game room
                 gameRoom(app, match_url, userID, userName);
             };
@@ -191,7 +198,7 @@ export function render(app, navigate) {
             };
         })
         .catch(error => {
-            console.error('Error fetching user_info:', error);
+            console.error('Error fetching intra ID:', error);
         });
 }
 

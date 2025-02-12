@@ -351,32 +351,6 @@ function cleanupWss(socket) {
     socket.close();
 }
 
-// function getOpponentNameFromMatchName(matchName) {
-//     // matchName 예: "1_2" "donglee2_sungmikí"
-//     const parts = matchName.split("_");  // ["1", "2"]
-//     let opponentName = null;
-//     for(let i = 0; i < parts.length; i++) {
-//         if (parts[i] !== userID) {
-//             fetch(`/api/users/${userID}`, {
-//                 credentials: 'include',
-//             }).then(response => {
-//                 if (response.ok) {
-//                     return response.json();
-//                 }
-//             }).then(data => {
-//                 console.log("data.user_name: " + data.user_name);
-//                 opponentName = data.user_name; // ["donglee2"]
-                
-//             });
-//         }
-//     }
-//     console.log("opponentName: " + opponentName);
-//     if (opponentName) {
-//         return opponentName;
-//     }
-//     return  "UnknownOpponent";
-// }
-
 // async/await 적용
 async function getOpponentNameFromMatchName(matchName) {
     const parts = matchName.split("_");
@@ -389,7 +363,8 @@ async function getOpponentNameFromMatchName(matchName) {
     });
     
     if (!response.ok) {
-        return "UnknownOpponent";
+        console.error('Failed to fetch user info');
+        return ;
     }
     const data = await response.json();
     return data.user_name;
