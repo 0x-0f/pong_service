@@ -1,3 +1,5 @@
+"use strict";
+
 import { t } from '/src/modules/locale/localeManager.js';
 import raccoon from '/assets/raccoon.gif';
 

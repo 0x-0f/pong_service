@@ -1,3 +1,5 @@
+"use strict";
+
 import { t } from '/src/modules/locale/localeManager.js';
 
 let wss = null;
@@ -9,9 +11,27 @@ function waitingRoom(app) {
         <div class="grid-item-right" id="rival">${t('wait_part', 'Waiting for participations...')}</div>
     </div>
     `
+    //main 버튼 생성
+    const mainBtn = document.createElement('button');
+    mainBtn.textContent = `${t('main', "BACK")}`;
+    mainBtn.classList.add("btn", "btn-warning", "main-btn");
+    mainBtn.addEventListener('click', () => {
+    cleanup();
+    // navigate('main');
+    hitstory.back();
+    });
+    
+    // 버튼을 감싸는 버튼 컨테이너(div) 생성
+    const btnContainer = document.createElement('div');
+    btnContainer.style.display = "flex";
+    btnContainer.style.justifyContent = "center";
+    btnContainer.appendChild(mainBtn);
+    // app에 추가.
+    app.appendChild(btnContainer);
+
 }
 
-async function gameRoom(app, match_url, userID, userName) {
+async function gameRoom(app, match_url, userID, userName, navigate) {
     document.addEventListener("keydown", function (e) {
     if (!wss) return;
 
@@ -35,6 +55,22 @@ async function gameRoom(app, match_url, userID, userName) {
     <h1 id="right-score">0</h1>
     </div>
     `;
+        //main 버튼 생성
+    const mainBtn = document.createElement('button');
+    mainBtn.textContent = `${t('main', "BACK")}`;
+    mainBtn.classList.add("btn", "btn-warning", "main-btn");
+    mainBtn.addEventListener('click', () => {
+        history.back();
+        // navigate('main');
+    });
+    
+    // 버튼을 감싸는 버튼 컨테이너(div) 생성
+    const btnContainer = document.createElement('div');
+    btnContainer.style.display = "flex";
+    btnContainer.style.justifyContent = "center";
+    btnContainer.appendChild(mainBtn);
+    // app에 추가.
+    app.appendChild(btnContainer);
     
     wss = new WebSocket(`wss://${window.location.hostname}${match_url}${userID}`);
     
@@ -190,7 +226,7 @@ export function render(app, navigate) {
                 const match_url = data.match_url;
 
                 // Transition to the game room
-                gameRoom(app, match_url, userID, userName);
+                gameRoom(app, match_url, userID, userName, navigate);
             };
 
             wss.onerror = function (e) {

@@ -1,3 +1,5 @@
+"use strict";
+
 import { getCookie } from '/src/modules/cookie/cookieManager.js';
 
 export function render(app, navigate) {

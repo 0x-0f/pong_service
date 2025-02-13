@@ -1,3 +1,5 @@
+"use strict";
+
 import { renderHeader } from './pages/header/header.js';
 import { loadLocale, setupLocaleListener } from './modules/locale/localeManager.js';
 
@@ -46,7 +48,12 @@ const routes = {
 const errorPage = () => import('./pages/error.js').then(module => module.render(app, navigate));
 
 function navigate(path) {
+    console.log (`${path} is navigated`);
+    // // 디버깅 시도
+    // history.pushState({ page :`${path}` }, `TITLE: ${path}`, `/${path}`);
     history.pushState({ path }, "", `/${path}`);
+    // // 디버깅 시도
+    // window.dispatchEvent(new PopStateEvent("popstate", { page: `${path}` }));
     renderPage(path);
 }
 
@@ -83,7 +90,7 @@ async function resolveRoute(path) {
 
 async function renderPage(path) {
     await loadLocale();
-    renderHeader(document.getElementById('header'), navigate);
+    renderHeader(document.getElementById('header'), navigate, path);
 
     try {
         const renderer = await resolveRoute(path);

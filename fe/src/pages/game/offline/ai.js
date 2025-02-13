@@ -1,3 +1,7 @@
+"use strict";
+
+import { t } from "../../../modules/locale/localeManager";
+
 export function render(app, navigate) {
   let animationFrameId;
   let keydownHandler;
@@ -12,6 +16,24 @@ export function render(app, navigate) {
           <h1 id="right-score">0</h1>
       </div>
   `;
+
+    //main 버튼 생성
+  const mainBtn = document.createElement('button');
+  mainBtn.textContent = `${t('main', "BACK")}`;
+  mainBtn.classList.add("btn", "btn-warning", "main-btn");
+  mainBtn.addEventListener('click', () => {
+    cleanup();
+    // navigate('main');
+    history.back();
+  });
+  
+  // 버튼을 감싸는 버튼 컨테이너(div) 생성
+  const btnContainer = document.createElement('div');
+  btnContainer.style.display = "flex";
+  btnContainer.style.justifyContent = "center";
+  btnContainer.appendChild(mainBtn);
+  // app에 추가.
+  app.appendChild(btnContainer);
 
   /* Initialize Game Variables */
   const canvas = document.getElementById('pongCanvas');

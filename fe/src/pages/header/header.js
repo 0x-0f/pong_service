@@ -1,8 +1,10 @@
+"use strict";
+
 import { changeLocale } from "../../modules/locale/localeManager";
 import { getCookie, removeCookie } from "../../modules/cookie/cookieManager";
 
-export function renderHeader(header, navigate) {
-
+export function renderHeader(header, navigate, path) {
+    // console.log (`${path} is rendered`);
     const jwt = getCookie('jwt');
     if ((!jwt) && (window.location.pathname !== '/login')) {
         navigate('login');
@@ -71,6 +73,7 @@ export function renderHeader(header, navigate) {
     });
 
     document.getElementById('pongbtn').addEventListener('click', () => {
-        navigate('main');
+        // navigate('main');
+        history.back();
     });
 }

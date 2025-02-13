@@ -1,3 +1,5 @@
+"use strict";
+
 import { t } from '/src/modules/locale/localeManager.js';
 import rock from '/assets/rock.png';
 import paper from '/assets/paper.png';
@@ -19,52 +21,34 @@ export function render(app, navigate) {
 
 /** 1) 최초 화면: "start matching" 버튼만 있는 화면 */
 function renderStartPage(app, navigate) {
+
     app.innerHTML = "";
-
-    // .rps-container 클래스를 가진 div
-    const container = document.createElement("div");
-    container.className = "rps-container";
-
-    const startBtn = document.createElement("button");
-    startBtn.textContent = t('rps-startMatching', "START Matching");
-
-    // Bootstrap 클래스 + rps-btn 클래스(hover 적용)
-    startBtn.classList.add("btn", "btn-primary", "rps-btn");
-
-    startBtn.addEventListener("click", () => {
-        fetch('/api/auth/user_info', {
-            credentials: 'include',
-        }).then(response => {
-            if (response.ok) {
-                return response.json();
-            }
-        }).then(data => {
-            userID = String(data.user_id);
-            userName = data.user_name;
-            startMatching(app, navigate);
-        })
-    });
-
-    container.appendChild(startBtn);
-    app.appendChild(container);
-}
-
-/** 2) 매칭 중인 화면 ("cancel matching" 버튼 + "waiting for opponent...") */
-function renderMatchingPage(app) {
-    app.innerHTML = "";
-
     const waitingText = document.createElement("div");
     waitingText.textContent = t('rps-watingOpponent', "WAITING for opponent...");
     waitingText.className = "rps-waiting-text";
 
+
     const cancelBtn = document.createElement("button");
-    cancelBtn.textContent = t('rps-cancelMatching', "CANCEL Matching");
+    cancelBtn.textContent = `${t('main', "BACK")}`;
 
     cancelBtn.classList.add("btn", "btn-danger", "rps-btn");
+    
+    fetch('/api/auth/user_info', {
+        credentials: 'include',
+    }).then(response => {
+        if (response.ok) {
+            return response.json();
+        }
+    }).then(data => {
+        userID = String(data.user_id);
+        userName = data.user_name;
+        startMatching(app, navigate);
+    });
 
     cancelBtn.addEventListener("click", () => {
         cleanupAllWebSockets();
-        renderStartPage(app);
+        // navigate('main');
+        history.back();
     });
 
     app.appendChild(waitingText);
@@ -79,7 +63,7 @@ function renderRpsGamePage(app) {
     // 1) 카운트다운 영역
     const counterDiv = document.createElement("div");
     counterDiv.className = "rps-counter"; 
-    counterDiv.textContent = "10";  // 초기 카운트 10
+    counterDiv.textContent = "5";  // 초기 카운트 10
 
     // 2) 3열 그리드 (가위바위보 선택 영역)
     const gridContainer = document.createElement("div");
@@ -232,13 +216,14 @@ function renderResultPage(app, navigate, result, opponentChoice, opponentName) {
 
     app.appendChild(resultGrid);
 
-    // main 버튼
+    // main 버튼인데 임시방편으로 Back 버튼으로 대체.popstate 개념 이해 후 수정 필요
     const mainBtn = document.createElement("button");
-    mainBtn.textContent = "main";
-    mainBtn.classList.add("btn", "btn-warning", "rps-main-btn");
+    mainBtn.textContent = `${t('main', "BACK")}`;
+    mainBtn.classList.add("btn", "btn-warning", "main-btn");
 
     mainBtn.addEventListener("click", () => {
-        navigate("main");
+        history.back();
+        // navigate("main");
     });
 
     const btnContainer = document.createElement("div");
@@ -269,7 +254,6 @@ function case_draw(app, navigate) {
 /** --- 이하 웹소켓 로직 및 유틸 함수는 기존과 동일 --- **/
 
 function startMatching(app, navigate) {
-    renderMatchingPage(app);
     wss = new WebSocket(`wss://${window.location.hostname}/ws/rps/join/${userID}`);
     wss.onmessage = (event) => {
         const data = JSON.parse(event.data);
