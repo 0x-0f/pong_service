@@ -22,13 +22,13 @@ class PongViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='history')
     def history(self, request, pk=None):
-        serializer = PongSerializerHistory
-        user = get_object_or_404(Users, intra_id=pk)
+        # serializer = PongSerializerHistory
+        user = get_object_or_404(Users, user_id=pk)
         if user is None:
             return JsonResponse({"message": "User not found"}, status=404)
-        primary_key = user.user_id
+        # primary_key = user.user_id
         # type_filter = request.query_params.get('type', "")
-        games = PongGame.objects.filter(Q(winner=user) | Q(loser=user))
+        games = PongGame.objects.filter(Q(player1=user) | Q(player2=user))
         # games = games.filter(type=type_filter)
         serializer = self.get_serializer(games, many=True, context={'request': request})
         return Response(serializer.data)
@@ -45,11 +45,11 @@ class RPSViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='history')
     def history(self, request, pk=None):
-        serializer = RPSSerializerHistory
-        user = get_object_or_404(Users, intra_id=pk)
+        # serializer = RPSSerializerHistory
+        user = get_object_or_404(Users, user_id=pk)
         if user is None:
             return JsonResponse({"message": "User not found"}, status=404)
-        primary_key = user.user_id
+        # primary_key = user.user_id
         games = RPSGame.objects.filter(Q(player1=user) | Q(player2=user))
         serializer = self.get_serializer(games, many=True, context={'request': request})
         return Response(serializer.data)
