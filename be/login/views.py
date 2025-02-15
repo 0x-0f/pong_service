@@ -79,11 +79,11 @@ class GoogleAuthViewSet(viewsets.ModelViewSet):
             return JsonResponse({"error": f"[user data missing]"}, status=status.HTTP_400_BAD_REQUEST)
 
         user_profile, created = Users.objects.update_or_create(
-            user_name=user_name,
+            email=email,
             defaults={
                 # "refresh_token": refresh_token,
                 "access_token": access_token,
-                "email": email,
+                "user_name": user_name,
             }
         )
 
