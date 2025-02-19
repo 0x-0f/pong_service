@@ -133,29 +133,28 @@ class GoogleAuthViewSet(viewsets.ModelViewSet):
         # if not jwt_token:
         #     jwt_token = request.COOKIES.get('tmp_jwt')
         if not jwt_token:
-            return JsonResponse({'error': 'JWT token not found'}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({'message': 'JWT token not found'}, status=status.HTTP_401_UNAUTHORIZED)
         try:
             payload = jwt.decode(jwt_token, settings.JWT_SECRET_KEY, algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
-            return JsonResponse({'message': 'Token is expired'}, status=status.HTTP_400_BAD_REQUEST)
-        exp_date = datetime.fromtimestamp(payload.get('exp'))
-        if exp_date < datetime.utcnow():
-            return JsonResponse({'message': 'Token is expired'}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return JsonResponse({'message': 'Token is valid'}, status=status.HTTP_200_OK)
+            return JsonResponse({'message': 'Token is expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        except jwt.InvalidTokenError:
+            return JsonResponse({'message': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        return JsonResponse({'message': 'Token is valid'}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["get"], url_path="user_info")
     def user_info(self, request):
         jwt_token = request.COOKIES.get('jwt')
         if not jwt_token:
-            return JsonResponse({'error': 'JWT token not found'}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({'message': 'JWT token not found'}, status=status.HTTP_401_UNAUTHORIZED)
         try:
             payload = jwt.decode(jwt_token, settings.JWT_SECRET_KEY, algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
-            return JsonResponse({'error': 'Token is expired'}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({'message': 'Token is expired'}, status=status.HTTP_401_UNAUTHORIZED)
         user = Users.objects.get(email=payload.get('user_email'))
         if not user:
-            return JsonResponse({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         else:
             return JsonResponse({
                 'user_id': user.user_id,
@@ -166,14 +165,14 @@ class GoogleAuthViewSet(viewsets.ModelViewSet):
     def user_name(self, request):
         jwt_token = request.COOKIES.get('jwt')
         if not jwt_token:
-            return JsonResponse({'error': 'JWT token not found'}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({'message': 'JWT token not found'}, status=status.HTTP_401_UNAUTHORIZED)
         try:
             payload = jwt.decode(jwt_token, settings.JWT_SECRET_KEY, algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
-            return JsonResponse({'error': 'Token is expired'}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({'message': 'Token is expired'}, status=status.HTTP_401_UNAUTHORIZED)
         user = Users.objects.get(email=payload.get('user_email'))
         if not user:
-            return JsonResponse({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         else:
             return JsonResponse({
                 'user_name': user.user_name
