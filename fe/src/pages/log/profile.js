@@ -103,7 +103,7 @@ function drawRPSMatches(data, app) {
             const leftDivImg = document.createElement('img');
             leftDivImg.src = getImagePath(items.your_choice);
             leftDivImg.className = 'rps-result-img';
-            leftResultImgs.appendChild(leftDivImg);
+            leftResultImgs.insertBefore(leftDivImg, leftResultImgs.firstChild);
             leftDiv.appendChild(leftResultImgs);
             leftResultImgs = document.createElement('div');
             gameResult.appendChild(leftDiv);
@@ -160,7 +160,7 @@ function drawRPSHistory(app, data) {
         }
         throw new Error('Failed to fetch history');
     }).then(data => {
-        app.getElementsByTagName('button')[0].textContent = 'RPS History';
+        app.getElementsByTagName('button')[0].textContent = 'Hidden Game History';
         drawRPSMatches(data, app);
 
     }).catch(error => {
@@ -194,7 +194,6 @@ function drawPongHistory(app, data) {
 
             const leftDiv = document.createElement('div');
             leftDiv.className = 'result-left-div';
-            
             const leftDivText = document.createElement('div');
             leftDivText.className = 'wrap';
             leftDivText.textContent = 'You\n' + String(yourScore);
@@ -203,17 +202,23 @@ function drawPongHistory(app, data) {
 
             const centerDiv = document.createElement('div');
             centerDiv.className = 'result-center-div';
-            centerDiv.textContent = items.date + '\n';
+            const centerDivText = document.createElement('div');
+            centerDivText.className = 'wrap';
+            centerDivText.textContent = items.date + '\n';
             if (yourScore > opponentScore) {
-                centerDiv.textContent += 'WIN\n';
+                centerDivText.textContent += 'WIN\n';
             } else {
-                centerDiv.textContent += 'LOSE\n';
+                centerDivText.textContent += 'LOSE\n';
             }
+            centerDiv.appendChild(centerDivText);
             gameResult.appendChild(centerDiv);
 
             const rightDiv = document.createElement('div');
             rightDiv.className = 'result-right-div';
-            rightDiv.textContent = items.opponent_name + '\n' + opponentScore;
+            const rightDivText = document.createElement('div');
+            rightDivText.className = 'wrap';
+            rightDivText.textContent = items.opponent_name + '\n' + opponentScore;
+            rightDiv.appendChild(rightDivText);
             gameResult.appendChild(rightDiv);
         }
         app.appendChild(gameResult);
