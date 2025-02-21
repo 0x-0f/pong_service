@@ -42,6 +42,7 @@ const routes = {
         'rps': () => import('./pages/log/rps.js').then(module => module.render(app, navigate)),
     },
     'rps': () => import('./pages/rps.js').then(module => module.render(app, navigate)),
+    'profile': () => import('./pages/log/profile.js').then(module => module.render(app, navigate)),
 };
 
 // Default error page

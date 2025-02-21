@@ -28,14 +28,23 @@ export function renderHeader(header, navigate, path) {
                 return response.json();
             }
         }).then(data => {
-            const divElement = document.querySelector('.uid');
-            if (divElement && divElement.querySelector('p')) {
-                return;
-            }
-            const userName = data.user_name;
-            const uidElement = document.createElement('p');
-            uidElement.textContent = userName;
-            document.querySelector('.uid').append(uidElement);
+            // const divElement = document.querySelector('.uid');
+            // if (divElement && divElement.querySelector('p')) {
+            //     return;
+            // }
+            // const userName = data.user_name;
+            // const uidElement = document.createElement('p');
+            // uidElement.textContent = userName;
+            // document.querySelector('.uid').append(uidElement);
+
+            //language 버튼과 서식 맞추기 필요
+            const userNameBtn = document.querySelector('.username');
+            userNameBtn.classList.add("btn", "btn-warning", "main-btn");
+            userNameBtn.textContent = data.user_name;
+            userNameBtn.addEventListener('click', () => {
+                navigate('profile');
+            });
+
         });
     }
 
@@ -48,7 +57,7 @@ export function renderHeader(header, navigate, path) {
                 <button id="ja-JP">日本語</button>
                 <button id="ko-KR">한국어</button>
             </div> <!-- .dropdown-content -->
-            <div class="uid"></div>
+            <button class="username"></button>
         </header>
     `;
 

@@ -19,7 +19,7 @@ export function render(app, navigate) {
     cleanupAllWebSockets();
 }
 
-/** 1) 최초 화면: "start matching" 버튼만 있는 화면 */
+/** 1) 최초 화면: matching을 시도중인 화면 */
 function renderStartPage(app, navigate) {
 
     app.innerHTML = "";

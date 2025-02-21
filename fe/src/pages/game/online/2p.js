@@ -78,7 +78,6 @@ async function gameRoom(app, match_url, userID, userName, navigate) {
     
     const parts = match_url.split('/');
     let lastPart = parts[parts.length - 2];
-    // console.log(`lastPart: ${lastPart}`);
     const splits = lastPart.split('_');
     for (let i = 0; i < splits.length; i++) {
         if (splits[i] === userID) {
@@ -93,10 +92,8 @@ async function gameRoom(app, match_url, userID, userName, navigate) {
             const data = await response.json();
             splits[i] = data.user_name;
         }
-        // console.log(`i: ${i}, splits[i]: ${splits[i]}`);
     }
     lastPart = splits.join('_');
-    // console.log(`lastPart: ${lastPart}`);
     
     
     const [leftUser, rightUser] = lastPart.split('_');
