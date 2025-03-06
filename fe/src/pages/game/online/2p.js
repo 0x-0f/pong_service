@@ -140,11 +140,9 @@ async function gameRoom(app, match_url, userID, userName, navigate) {
   		const rightScore = document.getElementById('right-score');
 
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		// ctx.beginPath();
-		// ctx.arc(gameState.ball.x, gameState.ball.y, 10, 0, Math.PI * 2);
 		ctx.fillRect(
-            gameState.ball.x, 
-            gameState.ball.y, 
+            gameState.ball_x, 
+            gameState.ball_y, 
             ball_width,
             ball_width
         );
@@ -155,13 +153,13 @@ async function gameRoom(app, match_url, userID, userName, navigate) {
 		ctx.fillStyle = 'white';
 		ctx.fillRect(
 			ball_width * 3,
-			gameState.paddle_positions.player1,
+			gameState.left_paddle,
 			ball_width,
 			ball_width * 6
 		);
 		ctx.fillRect(
 			canvas.width - ball_width * 4,
-			gameState.paddle_positions.player2,
+			gameState.right_paddle,
 			ball_width,
 			ball_width * 6
 		);
