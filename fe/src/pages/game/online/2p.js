@@ -131,7 +131,8 @@ async function gameRoom(app, match_url, userID, userName, navigate) {
 	}
 
 	function drawGameState(gameState, leftUser, rightUser) {
-        console.log('drawGameState');
+        const ball_width = 12;
+        // console.log('drawGameState');
 		if (!gameState) return;
 		const canvas = document.getElementById('pongCanvas');
   		const ctx = canvas.getContext('2d');
@@ -139,24 +140,30 @@ async function gameRoom(app, match_url, userID, userName, navigate) {
   		const rightScore = document.getElementById('right-score');
 
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		ctx.beginPath();
-		ctx.arc(gameState.ball.x, gameState.ball.y, 10, 0, Math.PI * 2);
+		// ctx.beginPath();
+		// ctx.arc(gameState.ball.x, gameState.ball.y, 10, 0, Math.PI * 2);
+		ctx.fillRect(
+            gameState.ball.x, 
+            gameState.ball.y, 
+            ball_width,
+            ball_width
+        );
 		ctx.fillStyle = 'white';
 		ctx.fill();
 		ctx.closePath();
 
 		ctx.fillStyle = 'white';
 		ctx.fillRect(
-			10,
+			ball_width * 3,
 			gameState.paddle_positions.player1,
-			10,
-			100
+			ball_width,
+			ball_width * 6
 		);
 		ctx.fillRect(
-			canvas.width - 20,
+			canvas.width - ball_width * 4,
 			gameState.paddle_positions.player2,
-			10,
-			100
+			ball_width,
+			ball_width * 6
 		);
 
         // const parts = match_url.split('/');
@@ -236,6 +243,7 @@ export function render(app, navigate) {
 }
 
 window.addEventListener('popstate', function () {
+    console.log(wss)
     if (wss) {
         wss.onclose = function () {}; // Avoid triggering additional events
         wss.close();
