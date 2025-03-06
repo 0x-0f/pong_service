@@ -1,8 +1,8 @@
 import asyncio
+import math
 from asgiref.sync import sync_to_async
 from .models import PongGame, RPSGame
 from user.models import Users
-
 fps = 60
 
 class PongGameManager:
@@ -20,60 +20,117 @@ class PongGameManager:
 		self.canvas_height = 600
 
 		self.paddle_width = 12
-		self.paddle_height = 100
+		self.paddle_height = 6 * self.paddle_width
 		self.paddle_positions = {
 			"player1": (self.canvas_height - self.paddle_height) / 2,
 			"player2": (self.canvas_height - self.paddle_height) / 2
 			}
-		self.paddle_speed = 14
-		self.ball= {"x": self.canvas_width / 2, "y": self.canvas_height / 2}
-		self.ballRadius = 10
-		self.ball_speed = {"x": 5, "y": 5}
+		self.paddle_pre_positions = {
+			"player1": (self.canvas_height - self.paddle_height) / 2,
+			"player2": (self.canvas_height - self.paddle_height) / 2
+		}
+		self.paddle_speed = 10
+		self.ball_width = self.paddle_width
+		self.ball_x = (self.canvas_width - self.ball_width) / 2
+		self.ball_y = (self.canvas_height - self.ball_width) / 2
+		self.ball_pre_x = 0
+		self.ball_pre_y = 0
+		self.ball_speed = 10
+		self.ball_vx = 5 
+		self.ball_vy = 0
 
-		self.win_condition = 7
+		self.win_condition = 10
 		self.status = "waiting"
 		self.connection = ""
 
 	async def update_game_state(self):
+		left_paddle_line = 4 * self.paddle_width
+		write_paddle_line = self.canvas_width - 4 * self.paddle_width
+		max_angle = math.pi * 8 / 16
 		while self.check_end() == False:
 			if self.check_connection() == False: # 두 플레이어 모두 지속적으로 online 상태인지 확인
 				await asyncio.sleep(1)
 				break
-			self.ball["x"] += self.ball_speed["x"]  # 볼 스피드만큼 움직임
-			self.ball["y"] += self.ball_speed["y"]  # 볼 스피드만큼 움직임
+			self.ball_pre_x = self.ball_x
+			self.ball_pre_y = self.ball_y
+			self.ball_x += self.ball_vx  # 볼 스피드만큼 움직임
+			self.ball_y += self.ball_vy  # 볼 스피드만큼 움직임
 
-			# 천장 혹은 바닥에 닿는지 확인
-			if self.ball["y"] < self.ballRadius:
-				self.ball["y"] = self.ballRadius # 공위치 정정
-				self.ball_speed["y"] *= -1; # 반대로 움직임
-			elif self.ball["y"] > self.canvas_height - self.ballRadius:
-				self.ball["y"] = self.canvas_height - self.ballRadius; # 공위치 정정
-				self.ball_speed["y"] *= -1; # 반대로 움직임
+			# if 0 < self.ball_vy:
+			# 	ball_y_sign = 1
+			# else:
+			# 	ball_y_sign = -1
+				
+			# 천장 충돌-
+			if self.ball_y <= 0:
+				self.ball_vy *= -1
+				self.ball_y *= -1
 
-			# 왼쪽 패들에 닿는지 확인
-			if self.ball["x"] - self.ballRadius <= self.paddle_width:
-				if self.paddle_positions["player1"] <= self.ball["y"] and self.ball["y"] <= self.paddle_positions["player1"] + self.paddle_height:
-					self.ball["x"] = self.paddle_width + self.ballRadius # 공위치 정정
-					self.ball_speed["x"] *= -1.1 # 반대로 움직임, 속도 증가
-			elif self.ball["x"] + self.ballRadius >= self.canvas_width - self.paddle_width:
-				if self.paddle_positions["player2"] <= self.ball["y"] and self.ball["y"] <= self.paddle_positions["player2"] + self.paddle_height:
-					self.ball["x"] = self.canvas_width - self.paddle_width - self.ballRadius # 공위치 정정
-					self.ball_speed["x"] *= -1.1 # 반대로 움직임, 속도 증가
+			# 바닥 충돌
+			if self.canvas_height <= self.ball_y + self.ball_width:
+				self.ball_vy *= -1
+				self.ball_y -= 2 * (self.ball_y + self.ball_width - self.canvas_height)
 
-			if self.ball_speed["y"] < 0: # 공의 방향이 위/아래 인지 확인
-				ball_y_sign = -1
-			else:
-				ball_y_sign = 1
+			# 왼쪽 패들에 충돌
+			if 2 * self.paddle_width < self.ball_x and self.ball_x <= 4 * self.paddle_width:  # 패들과 공의 x 좌표의 겹침
+				# print("왼쪽패들 x 좌표 겹침")
+				if self.paddle_positions["player1"] < self.ball_y + self.ball_width and self.paddle_positions["player1"] + self.paddle_height > self.ball_y:  # 패들과 공의 y 좌표의 겹침
+					# print("왼쪽패들 y 좌표 겹침")
+					dt = (self.ball_x - left_paddle_line) / self.ball_vx
+					interpolated_y = self.ball_y - self.ball_vy * dt
+					interpolated_h = self.paddle_positions["player1"] - (self.paddle_positions["player1"] - self.paddle_pre_positions["player1"]) * dt
+					if interpolated_h < interpolated_y + self.ball_width and interpolated_y < interpolated_h + self.paddle_height: # 패들 옆으로의 충돌
+						angle = max_angle * ((interpolated_y + (self.ball_width / 2)) - (interpolated_h + (self.paddle_height / 2))) / (3.5 * self.paddle_width)
+						self.ball_vx = self.ball_speed * math.cos(angle)
+						self.ball_vy = self.ball_speed * math.sin(angle)
+						self.ball_x = left_paddle_line + self.ball_vx * dt
+						self.ball_y = interpolated_y + self.ball_vy * dt
+					elif 0 <= self.ball_vy: # 패들 위쪽으로 충돌
+						self.ball_vy *= -1
+						self.ball_y = self.paddle_positions["player1"] - self.ball_width
+					elif self.ball_vy < 0: # 패들 밑면으로 충돌
+						self.ball_vy *= -1
+						self.ball_y = self.paddle_positions["player1"] + self.paddle_height
 
-			# 왼쪽 벽에 닿으면 오른쪽 득점, 오른쪽 벽에 닿으면 왼쪽 득점
-			if self.ball["x"] - self.ballRadius <= 0:
+			# 오른쪽 패들에 충돌
+			if self.canvas_width - 5 * self.paddle_width < self.ball_x and self.ball_x < self.canvas_width - 3 * self.paddle_width:
+				# print("오른쪽패들 x 좌표 겹침")
+				if self.paddle_positions["player2"] < self.ball_y + self.ball_width and self.paddle_positions["player2"] + self.paddle_height > self.ball_y:  # 패들과 공의 y 좌표의 겹침
+					# print("오른쪽패들 y 좌표 겹침")
+					dt = ((self.ball_x + self.ball_width) - write_paddle_line) / self.ball_vx
+					interpolated_y = self.ball_y - self.ball_vy * dt
+					interpolated_h = self.paddle_positions["player2"] - (self.paddle_positions["player2"] - self.paddle_pre_positions["player2"]) * dt
+					if interpolated_h < interpolated_y + self.ball_width and interpolated_y < interpolated_h + self.paddle_height: # 패들 옆으로의 충돌
+						angle = max_angle * ((interpolated_y + (self.ball_width / 2)) - (interpolated_h + (self.paddle_height / 2))) / (3.5 * self.paddle_width)
+						self.ball_vx = self.ball_speed * math.cos(angle + math.pi)
+						self.ball_vy = self.ball_speed * math.sin(angle)
+						self.ball_x = write_paddle_line - self.ball_width + self.ball_vx * dt
+						self.ball_y = interpolated_y + self.ball_vy * dt
+					elif 0 <= self.ball_vy: # 패들 위쪽으로 충돌
+						self.ball_vy *= -1
+						self.ball_y = self.paddle_positions["player2"] - self.ball_width
+					elif self.ball_vy < 0: # 패들 밑면으로 충돌
+						self.ball_vy *= -1
+						self.ball_y = self.paddle_positions["player2"] + self.paddle_height
+				
+			# player 1 득점
+			if self.ball_x + self.ball_width < 0:
 				self.scores[1] += 1
-				self.ball= {"x": self.canvas_width / 2, "y": self.canvas_height / 2} #공위치 초기화
-				self.ball_speed = {"x": 5, "y": 5 * ball_y_sign}  # 공의 속도 초기화, 이긴 플레이어에게 보내기
-			elif self.ball["x"] + self.ballRadius >= self.canvas_width:
+				self.ball_x = (self.canvas_width - self.ball_width) / 2
+				self.ball_y = (self.canvas_height - self.ball_width) / 2
+				self.ball_pre_x = (self.canvas_width - self.ball_width) / 2
+				self.ball_pre_y = (self.canvas_height - self.ball_width) / 2
+				self.ball_vx = -5 
+				self.ball_vy = 0
+			# player 2 득점
+			if self.canvas_width < self.ball_x:
 				self.scores[0] += 1
-				self.ball= {"x": self.canvas_width / 2, "y": self.canvas_height / 2} #공위치 초기화
-				self.ball_speed = {"x": -5, "y": 5 * ball_y_sign}  # 공의 속도 초기와, 이긴 플레어에게 보내기
+				self.ball_x = (self.canvas_width - self.ball_width) / 2
+				self.ball_y = (self.canvas_height - self.ball_width) / 2
+				self.ball_pre_x = (self.canvas_width - self.ball_width) / 2
+				self.ball_pre_y = (self.canvas_height - self.ball_width) / 2
+				self.ball_vx = 5 
+				self.ball_vy = 0
 
 			await asyncio.sleep(1/fps)
 		await self.finish_game() # 게임 종료조건시 게임 종료 및 저장 함수 콜
@@ -96,6 +153,7 @@ class PongGameManager:
 			self.status = new_status
 
 	def move_paddle(self, player, direction):  # player의 패들 이동 계산
+		self.paddle_pre_positions[player] = self.paddle_positions[player]
 		if direction == "up":
 			self.paddle_positions[player] = max(0, self.paddle_positions[player] - self.paddle_speed)
 		elif direction == "down":
@@ -112,8 +170,12 @@ class PongGameManager:
 			}
 		else:
 			return {
-				"ball": self.ball,
-				"paddle_positions": self.paddle_positions,
+				# "ball": self.ball,
+				# "paddle_positions": self.paddle_positions,
+				"ball_x": self.ball_x,
+				"ball_y": self.ball_y,
+				"left_paddle": self.paddle_positions["player1"],
+				"right_paddle": self.paddle_positions["player2"],
 				"left_score": self.scores[0],
 				"right_score": self.scores[1],
 				"status": self.status
