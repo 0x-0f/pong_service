@@ -44,18 +44,16 @@ class PongSerializerHistory(serializers.ModelSerializer):
     def get_opponent_score(self, obj):
         user_id = self.get_user_id()
         if obj.player1_id == user_id:
-            return obj.player2_score if obj.player2_score else None
+            return obj.player2_score 
         elif obj.player2_id == user_id:
-            return obj.player1_score if obj.player1_score else None
-        return None
+            return obj.player1_score
     
     def get_your_score(self, obj):
         user_id = self.get_user_id()
         if obj.player1_id == user_id:
-            return obj.player1_score if obj.player1_score else None
+            return obj.player1_score
         elif obj.player2_id == user_id:
-            return obj.player2_score if obj.player2_score else None
-        return None
+            return obj.player2_score 
 
     def get_user_id(self):
         request = self.context.get('request')
