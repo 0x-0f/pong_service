@@ -126,7 +126,13 @@
 /* 기존에 rps-img 로 쓰던 스타일 -> 
    만약 여러 페이지에서 사용중이라면 일관되게 유지 가능 
    여기서는 동일 120x120으로 갱신 */
+
 .rps-img {
   width: 120px;
   height: 120px;
+}
+
+.rps-result-img {
+    width: 100px;
+    height: 100px;
 }

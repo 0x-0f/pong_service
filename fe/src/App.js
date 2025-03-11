@@ -3,6 +3,17 @@
 import { renderHeader } from './pages/header/header.js';
 import { loadLocale, setupLocaleListener } from './modules/locale/localeManager.js';
 
+let g_wss = null;
+// getter
+export function getWebSocket() {
+    return g_wss;
+}
+
+// setter
+export function setWebSocket(ws) {
+    g_wss = ws;
+}
+
 const app = document.getElementById('app');
 
 setupLocaleListener();
@@ -25,7 +36,6 @@ window.addEventListener('storage', async (event) => {
 // Routing map for multi-depth routes
 const routes = {
     'login': () => import('./pages/login.js').then(module => module.render(app, navigate)),
-    // '2fa': () => import('./pages/2fa.js').then(module => module.render(app, navigate)),
     'main': () => import('./pages/main.js').then(module => module.render(app, navigate)),
     'game': {
         'offline': {
@@ -50,11 +60,12 @@ const errorPage = () => import('./pages/error.js').then(module => module.render(
 
 function navigate(path) {
     console.log (`${path} is navigated`);
-    // // 디버깅 시도
-    // history.pushState({ page :`${path}` }, `TITLE: ${path}`, `/${path}`);
+    if (g_wss) {
+        console.log('closing websocket');
+        g_wss.close();
+        g_wss = null;
+    }
     history.pushState({ path }, "", `/${path}`);
-    // // 디버깅 시도
-    // window.dispatchEvent(new PopStateEvent("popstate", { page: `${path}` }));
     renderPage(path);
 }
 

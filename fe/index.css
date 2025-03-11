@@ -159,13 +159,47 @@ body {
     color: #fff;
   }
 
-.game-result {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  width: 90vw;
-  margin: 0 auto;
-  padding-top: 0.3em;
+.result {
+    display: grid;
+    /* grid-template-columns: 1fr 1fr 1fr; */
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto;
+    column-gap: 3em;
+    row-gap: 5em;
+}
+
+
+.result-left-div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-left: 0.6em solid #fff;
+    font-size: 1.5em;
+    padding: 1em;
+}
+
+.result-center-div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5em;
+    padding: 1em;
+}
+
+.result-right-div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-right: 0.6em solid #fff;
+    font-size: 1.5em;
+    padding: 1em;
+}
+
+.wrap {
+    white-space: pre-wrap;
 }
 
 .left-tab, .right-tab {
@@ -176,10 +210,11 @@ body {
   padding: 1em;
 }
 
+/* former format */
 .left-tab {
   border-left: 0.6em solid #fff;
 }
-
+/* former format */
 .right-tab {
   border-right: 0.6em solid #fff;
   align-items: flex-end;
@@ -192,4 +227,15 @@ body {
     /* font-size: 32px; */
     /* border: none; */
     cursor: pointer;
+}
+
+.main-btn:hover {
+    background-color: darkgray;
+}
+
+.user-info-btn {
+    cursor: pointer;
+}
+.user-info-btn:hover {
+    background-color: darkgray;
 }

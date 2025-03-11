@@ -216,14 +216,13 @@ function renderResultPage(app, navigate, result, opponentChoice, opponentName) {
 
     app.appendChild(resultGrid);
 
-    // main 버튼인데 임시방편으로 Back 버튼으로 대체.popstate 개념 이해 후 수정 필요
     const mainBtn = document.createElement("button");
     mainBtn.textContent = `${t('main', "BACK")}`;
     mainBtn.classList.add("btn", "btn-warning", "main-btn");
 
     mainBtn.addEventListener("click", () => {
-        history.back();
-        // navigate("main");
+        // history.back();
+        navigate("main");
     });
 
     const btnContainer = document.createElement("div");

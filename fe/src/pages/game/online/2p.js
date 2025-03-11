@@ -1,8 +1,10 @@
 "use strict";
 
 import { t } from '/src/modules/locale/localeManager.js';
+import { getWebSocket, setWebSocket } from '/src/App.js';
 
 let wss = null;
+
 
 function waitingRoom(app) {
     app.innerHTML = `
@@ -17,8 +19,8 @@ function waitingRoom(app) {
     mainBtn.classList.add("btn", "btn-warning", "main-btn");
     mainBtn.addEventListener('click', () => {
     cleanup();
-    // navigate('main');
-    hitstory.back();
+    navigate('main');
+    // history.back();
     });
     
     // 버튼을 감싸는 버튼 컨테이너(div) 생성
@@ -55,13 +57,13 @@ async function gameRoom(app, match_url, userID, userName, navigate) {
     <h1 id="right-score">0</h1>
     </div>
     `;
-        //main 버튼 생성
+    //main 버튼 생성
     const mainBtn = document.createElement('button');
     mainBtn.textContent = `${t('main', "BACK")}`;
     mainBtn.classList.add("btn", "btn-warning", "main-btn");
     mainBtn.addEventListener('click', () => {
-        history.back();
-        // navigate('main');
+        // history.back();
+        navigate('main');
     });
     
     // 버튼을 감싸는 버튼 컨테이너(div) 생성
@@ -73,6 +75,7 @@ async function gameRoom(app, match_url, userID, userName, navigate) {
     app.appendChild(btnContainer);
     
     wss = new WebSocket(`wss://${window.location.hostname}${match_url}${userID}`);
+    setWebSocket(wss);
     
     let gameState;
     
@@ -99,7 +102,14 @@ async function gameRoom(app, match_url, userID, userName, navigate) {
     const [leftUser, rightUser] = lastPart.split('_');
 
 	wss.onmessage = function(e) {
-		gameState = JSON.parse(e.data);
+        try {
+            gameState = JSON.parse(e.data); 
+        }
+        catch (error) {
+            console.error('Error parsing JSON:', error);
+            return;
+        }
+        console.log(gameState);
         if (gameState.status == 'saved') {
             app.innerHTML = `
             <h1>Game Over</h1>
@@ -127,8 +137,15 @@ async function gameRoom(app, match_url, userID, userName, navigate) {
                 window.location.href = '/main';
             });
         }
-		drawGameState(gameState, leftUser, rightUser);
+        else {
+            drawGameState(gameState, leftUser, rightUser);
+        }
 	}
+
+    // debug
+    wss.onclose = function() {
+        console.log('WEBSOCKET CLOSED');
+    }
 
 	function drawGameState(gameState, leftUser, rightUser) {
         const ball_width = 12;
@@ -155,13 +172,13 @@ async function gameRoom(app, match_url, userID, userName, navigate) {
 			ball_width * 3,
 			gameState.left_paddle,
 			ball_width,
-			ball_width * 6
+			ball_width * 8
 		);
 		ctx.fillRect(
 			canvas.width - ball_width * 4,
 			gameState.right_paddle,
 			ball_width,
-			ball_width * 6
+			ball_width * 8
 		);
 
         // const parts = match_url.split('/');
@@ -222,6 +239,7 @@ export function render(app, navigate) {
 
             // Dynamically determine the WebSocket protocol based on the current protocol
             wss = new WebSocket(`wss://${window.location.hostname}/ws/pong/join/${userID}`);
+            setWebSocket(wss);
 
             wss.onmessage = function (e) {
                 const data = JSON.parse(e.data);
@@ -247,3 +265,4 @@ window.addEventListener('popstate', function () {
         wss.close();
     }
 });
+

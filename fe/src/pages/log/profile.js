@@ -103,7 +103,7 @@ function drawRPSMatches(data, app) {
             const leftDivImg = document.createElement('img');
             leftDivImg.src = getImagePath(items.your_choice);
             leftDivImg.className = 'rps-result-img';
-            leftResultImgs.insertBefore(leftDivImg, leftResultImgs.firstChild);
+            leftResultImgs.appendChild(leftDivImg);
             leftDiv.appendChild(leftResultImgs);
             leftResultImgs = document.createElement('div');
             gameResult.appendChild(leftDiv);
@@ -136,7 +136,7 @@ function drawRPSMatches(data, app) {
             const leftDivImg = document.createElement('img');
             leftDivImg.src = getImagePath(items.your_choice);
             leftDivImg.className = 'rps-result-img';
-            leftResultImgs.appendChild(leftDivImg);
+            leftResultImgs.appendChild(leftDivImg, leftResultImgs.firstChild);
 
             if (resultText.textContent === '') {
                 resultText.textContent = RPSJudge(items.your_choice, items.opponent_choice);

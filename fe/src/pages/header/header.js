@@ -82,7 +82,7 @@ export function renderHeader(header, navigate, path) {
     });
 
     document.getElementById('pongbtn').addEventListener('click', () => {
-        // navigate('main');
-        history.back();
+        navigate('main');
+        // history.back();
     });
 }
