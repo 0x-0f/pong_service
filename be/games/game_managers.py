@@ -162,16 +162,16 @@ class PongGameManager:
 	def get_state(self): # 각 좌표, 점수, 상태 보내기
 		if self.connection == "disconnected" and self.status == "saved":
 			return {
-				"ball": self.ball,
-				"paddle_positions": self.paddle_positions,
+				"ball_x": self.ball_x,
+				"ball_y": self.ball_y,
+				"left_paddle": self.paddle_positions["player1"],
+				"right_paddle": self.paddle_positions["player2"],
 				"left_score": self.scores[0],
 				"right_score": self.scores[1],
 				"status": "disconnected",
 			}
 		else:
 			return {
-				# "ball": self.ball,
-				# "paddle_positions": self.paddle_positions,
 				"ball_x": self.ball_x,
 				"ball_y": self.ball_y,
 				"left_paddle": self.paddle_positions["player1"],
