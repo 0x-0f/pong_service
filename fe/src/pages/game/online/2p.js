@@ -33,6 +33,14 @@ function waitingRoom(app) {
 
 }
 
+// // send key input to the server at 60fps
+// function sendKeyInput60fps(wss, key) {
+//     if (!wss) return;
+//     wss.send(JSON.stringify({ "move": key }));
+    
+
+// }
+
 async function gameRoom(app, match_url, userID, userName, navigate) {
     document.addEventListener("keydown", function (e) {
     if (!wss) return;
@@ -46,6 +54,17 @@ async function gameRoom(app, match_url, userID, userName, navigate) {
         wss.send(JSON.stringify({ "move" : "down" }));
     }
     });
+
+    document.addEventListener("keyup", function (e) {
+    if (!wss) return;
+
+    // w -> 위로 이동, s -> 아래로 이동
+    if (e.key === "w" || e.key === "ArrowUp" || e.key === "s" || e.key === "ArrowDown") {
+        // {"move":["stop"]} 전송
+        wss.send(JSON.stringify({ "move" : "stop" }));
+    }
+    });
+
 
     app.innerHTML = `
     <canvas id="pongCanvas" width="800px" height="600px" style="border: 1px solid #FFF">
@@ -62,7 +81,7 @@ async function gameRoom(app, match_url, userID, userName, navigate) {
     mainBtn.textContent = `${t('main', "BACK")}`;
     mainBtn.classList.add("btn", "btn-warning", "main-btn");
     mainBtn.addEventListener('click', () => {
-        // history.back();
+        // history.back();ㄹㄹ
         navigate('main');
     });
     
@@ -142,10 +161,10 @@ async function gameRoom(app, match_url, userID, userName, navigate) {
         }
 	}
 
-    // debug
-    wss.onclose = function() {
-        console.log('WEBSOCKET CLOSED');
-    }
+    // // debug
+    // wss.onclose = function() {
+    //     console.log('WEBSOCKET CLOSED');
+    // }
 
 	function drawGameState(gameState, leftUser, rightUser) {
         const ball_width = 12;
