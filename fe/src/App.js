@@ -46,11 +46,11 @@ const routes = {
             '2p': () => import('./pages/game/online/2p.js').then(module => module.render(app, navigate)),
         },
     },
-    'log': {
-        'main': () => import('./pages/log/main.js').then(module => module.render(app, navigate)),
-        'dual': () => import('./pages/log/dual.js').then(module => module.render(app, navigate)),
-        'rps': () => import('./pages/log/rps.js').then(module => module.render(app, navigate)),
-    },
+    // 'log': {
+    //     'main': () => import('./pages/log/main.js').then(module => module.render(app, navigate)),
+    //     'dual': () => import('./pages/log/dual.js').then(module => module.render(app, navigate)),
+    //     'rps': () => import('./pages/log/rps.js').then(module => module.render(app, navigate)),
+    // },
     'rps': () => import('./pages/rps.js').then(module => module.render(app, navigate)),
     'profile': () => import('./pages/log/profile.js').then(module => module.render(app, navigate)),
 };
