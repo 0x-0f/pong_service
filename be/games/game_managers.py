@@ -49,7 +49,7 @@ class PongGameManager:
 		max_angle = math.pi * 8 / 16
 		while self.check_end() == False:
 			if self.check_connection() == False: # 두 플레이어 모두 지속적으로 online 상태인지 확인
-				await asyncio.sleep(1)
+				# await asyncio.sleep(1)
 				break
 			self.ball_pre_x = self.ball_x
 			self.ball_pre_y = self.ball_y
@@ -85,7 +85,7 @@ class PongGameManager:
 						self.ball_vy = self.ball_speed * math.sin(angle)
 						self.ball_x = left_paddle_line + self.ball_vx * dt
 						self.ball_y = interpolated_y + self.ball_vy * dt
-					elif 0 <= self.ball_vy: # 패들 위쪽으로 충돌
+					elif 0 < self.ball_vy: # 패들 위쪽으로 충돌
 						self.ball_vy *= -1
 						self.ball_y = self.paddle_positions["player1"] - self.ball_width
 					elif self.ball_vy < 0: # 패들 밑면으로 충돌
@@ -106,7 +106,7 @@ class PongGameManager:
 						self.ball_vy = self.ball_speed * math.sin(angle)
 						self.ball_x = write_paddle_line - self.ball_width + self.ball_vx * dt
 						self.ball_y = interpolated_y + self.ball_vy * dt
-					elif 0 <= self.ball_vy: # 패들 위쪽으로 충돌
+					elif 0 < self.ball_vy: # 패들 위쪽으로 충돌
 						self.ball_vy *= -1
 						self.ball_y = self.paddle_positions["player2"] - self.ball_width
 					elif self.ball_vy < 0: # 패들 밑면으로 충돌

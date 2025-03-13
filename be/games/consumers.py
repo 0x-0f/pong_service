@@ -104,6 +104,8 @@ class PongMatchConsumer(AsyncWebsocketConsumer):
 			self.role = "player1"
 		elif self.user_id == player2:
 			self.role = "player2"
+		
+		self.paddle_direction = "stop"
 
 		async with asyncio.Lock():  # lock 걸고 내 상태를 off->on 으로 활성화
 			pong_game_rooms[self.match_name].players_connection[self.role] = "on"
@@ -132,7 +134,7 @@ class PongMatchConsumer(AsyncWebsocketConsumer):
 	async def receive(self, text_data): # player의 패들이동 입력받기 { "move": "up"/"down" }
 		data = json.loads(text_data)
 		if "move" in data:
-			pong_game_rooms[self.match_name].move_paddle(self.role, data["move"])
+			self.paddle_direction = data["move"]
 
 	async def send_position(self): # 메인 함수 status(waiting > playing > saving > saved) 에 따라서 게임 진행
 		global pong_game_rooms
@@ -146,14 +148,15 @@ class PongMatchConsumer(AsyncWebsocketConsumer):
 				pong_game_rooms[self.match_name].get_state()
 			))
 			await self.close()
-			await asyncio.sleep(1)
+			await asyncio.sleep(1/2)
 		while pong_game_rooms[self.match_name].status == "playing": # 게임이 진행되는 동안 게임좌표를 player에게 보내기
+			pong_game_rooms[self.match_name].move_paddle(self.role, self.paddle_direction)
 			await self.send(text_data=json.dumps(
 				pong_game_rooms[self.match_name].get_state()
 			))
 			await asyncio.sleep(1/fps)
 		while pong_game_rooms[self.match_name].status != "saved": # 게임을 저장하는동안 기다림
-			await asyncio.sleep(1)
+			await asyncio.sleep(1/2)
 		await self.send(text_data=json.dumps(  # 마지막 결과 보내주기
 				pong_game_rooms[self.match_name].get_state()
 		))
@@ -297,7 +300,7 @@ class RPSMatchConsumer(AsyncWebsocketConsumer):
 				{"status": "network_error"}
 			))
 			await self.close()
-			await asyncio.sleep(1)
+			await asyncio.sleep(1/2)
 		else:
 			await self.send(text_data=json.dumps( # 시작신호 주고 10(?!)초 기다리기 (프론트에서 카운트 다운)//
 				{"status": "start"}
@@ -305,10 +308,10 @@ class RPSMatchConsumer(AsyncWebsocketConsumer):
 			asyncio.sleep(10)
 
 		while await rps_game_rooms[self.match_name].get_status() == "playing": # 두 플레이어 모두 선택이 전달될때까지 대기
-			await asyncio.sleep(1)
+			await asyncio.sleep(1/2)
 
 		while await rps_game_rooms[self.match_name].get_status() == "saving": # 결과를 저장할동안 대기
-			await asyncio.sleep(1)
+			await asyncio.sleep(1/2)
 
 		data = await rps_game_rooms[self.match_name].get_data() # 게임 내용 가져오기
 		await self.send(text_data=json.dumps(  # 게임 결과 전달하기
