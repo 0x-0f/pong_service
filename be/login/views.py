@@ -133,7 +133,7 @@ class GoogleAuthViewSet(viewsets.ModelViewSet):
         # if not jwt_token:
         #     jwt_token = request.COOKIES.get('tmp_jwt')
         if not jwt_token:
-            return JsonResponse({'message': 'JWT token not found'}, status=status.HTTP_401_UNAUTHORIZED)
+            return JsonResponse({'message': 'JWT token not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
             payload = jwt.decode(jwt_token, settings.JWT_SECRET_KEY, algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
