@@ -38,7 +38,8 @@ class PongGameManager:
 		self.ball_speed = 10
 		self.ball_vx = 5 
 		self.ball_vy = 0
-		self.alpha = self.paddle_speed * 0.2
+		
+		self.delta_y = self.paddle_speed * 0.2
 
 		self.win_condition = 10
 		self.status = "waiting"
@@ -91,13 +92,13 @@ class PongGameManager:
 						if (0 < self.ball_vy):
 							self.ball_vy *= -1
 						else:
-							self.ball_vy -= self.alpha
+							self.ball_vy -= self.delta_y
 					elif interpolated_h + self.paddle_height < interpolated_y + self.ball_width: # 패들 밑면으로 충돌
 						self.ball_y = self.paddle_positions["player1"] + self.paddle_height
 						if (self.ball_vy < 0):
 							self.ball_vy *= -1
 						else:
-							self.ball_vy += self.alpha
+							self.ball_vy += self.delta_y
 
 			# 오른쪽 패들에 충돌
 			if self.canvas_width - 5 * self.paddle_width < self.ball_x and self.ball_x < self.canvas_width - 3 * self.paddle_width:
@@ -118,13 +119,13 @@ class PongGameManager:
 						if (0 < self.ball_vy):
 							self.ball_vy *= -1
 						else:
-							self.ball_vy -= self.alpha
+							self.ball_vy -= self.delta_y
 					elif interpolated_h + self.paddle_height < interpolated_y + self.ball_width: # 패들 밑면으로 충돌
 						self.ball_y = self.paddle_positions["player2"] + self.paddle_height
 						if (self.ball_vy < 0):
 							self.ball_vy *= -1
 						else:
-							self.ball_vy += self.alpha
+							self.ball_vy += self.delta_y
 				
 			# player 1 득점
 			if self.ball_x + self.ball_width < 0:
