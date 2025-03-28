@@ -23,14 +23,15 @@ export function render(app, navigate) {
         app.innerHTML = ``;
         const headButton = document.createElement('button');
         headButton.classList.add('btn', 'btn-warning', 'main-btn');
+        headButton.textContent = 'Game history';
         app.appendChild(headButton);
         drawPongHistory(app, data);
         headButton.addEventListener('click', () => {
-            if (headButton.textContent === 'PONG History') {
-                drawRPSHistory(app, data);
+            if (document.getElementsByClassName('rps-result-img').length > 0) {
+                drawPongHistory(app, data);
             }
             else {
-                drawPongHistory(app, data);
+                drawRPSHistory(app, data);
             }
         });
 
@@ -103,7 +104,7 @@ function drawRPSMatches(data, app) {
             const leftDivImg = document.createElement('img');
             leftDivImg.src = getImagePath(items.your_choice);
             leftDivImg.className = 'rps-result-img';
-            leftResultImgs.appendChild(leftDivImg);
+            leftResultImgs.insertBefore(leftDivImg, leftResultImgs.firstChild);
             leftDiv.appendChild(leftResultImgs);
             leftResultImgs = document.createElement('div');
             gameResult.appendChild(leftDiv);
@@ -127,7 +128,7 @@ function drawRPSMatches(data, app) {
             const rightDivImg = document.createElement('img');
             rightDivImg.src = getImagePath(items.opponent_choice);
             rightDivImg.className = 'rps-result-img';
-            rightResultImgs.appendChild(rightDivImg);
+            rightResultImgs.insertBefore(rightDivImg, rightResultImgs.firstChild);
             rightDiv.appendChild(rightResultImgs);
             rightResultImgs = document.createElement('div');
             gameResult.appendChild(rightDiv);
@@ -136,7 +137,7 @@ function drawRPSMatches(data, app) {
             const leftDivImg = document.createElement('img');
             leftDivImg.src = getImagePath(items.your_choice);
             leftDivImg.className = 'rps-result-img';
-            leftResultImgs.appendChild(leftDivImg, leftResultImgs.firstChild);
+            leftResultImgs.insertBefore(leftDivImg, leftResultImgs.firstChild);
 
             if (resultText.textContent === '') {
                 resultText.textContent = RPSJudge(items.your_choice, items.opponent_choice);
@@ -145,7 +146,7 @@ function drawRPSMatches(data, app) {
             const rightDivImg = document.createElement('img');
             rightDivImg.src = getImagePath(items.opponent_choice);
             rightDivImg.className = 'rps-result-img';
-            rightResultImgs.appendChild(rightDivImg);
+            rightResultImgs.insertBefore(rightDivImg, rightResultImgs.firstChild);
         }
     }
     app.appendChild(gameResult);
@@ -160,7 +161,7 @@ function drawRPSHistory(app, data) {
         }
         throw new Error('Failed to fetch history');
     }).then(data => {
-        app.getElementsByTagName('button')[0].textContent = 'Hidden Game History';
+        // app.getElementsByTagName('button')[0].textContent = 'Hidden Game History';
         drawRPSMatches(data, app);
 
     }).catch(error => {
@@ -177,7 +178,7 @@ function drawPongHistory(app, data) {
         }
         throw new Error('Failed to fetch history');
     }).then(data => {
-        app.getElementsByTagName('button')[0].textContent = 'PONG History';
+        // app.getElementsByTagName('button')[0].textContent = 'Game History';
         const oldGameResult = document.getElementById('gameResult');
         if (oldGameResult) {
             oldGameResult.remove();
