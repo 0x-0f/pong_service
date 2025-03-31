@@ -75,57 +75,53 @@ class PongGameManager:
 
 			# 왼쪽 패들에 충돌
 			if 2 * self.paddle_width < self.ball_x and self.ball_x <= 4 * self.paddle_width:  # 패들과 공의 x 좌표의 겹침
-				# print("왼쪽패들 x 좌표 겹침")
 				if self.paddle_positions["player1"] < self.ball_y + self.ball_width and self.paddle_positions["player1"] + self.paddle_height > self.ball_y:  # 패들과 공의 y 좌표의 겹침
-					# print("왼쪽패들 y 좌표 겹침")
-					dt = (self.ball_x - left_paddle_line) / self.ball_vx
-					interpolated_y = self.ball_y - self.ball_vy * dt
-					interpolated_h = self.paddle_positions["player1"] - (self.paddle_positions["player1"] - self.paddle_pre_positions["player1"]) * dt
+					dt = (self.ball_x - left_paddle_line) / self.ball_vx # 계산상 충돌했어야 하는 지점을 넘어선 초과 시간 
+					interpolated_y = self.ball_y - self.ball_vy * dt # 보간법으로 보정된 계산상 충돌했어야 하는 시점에서의 공의 y좌표
+					interpolated_h = self.paddle_positions["player1"] - (self.paddle_positions["player1"] - self.paddle_pre_positions["player1"]) * dt # 보간법으로 보정된 계산상 충돌했어야 하는 시점에서의 패들의 y좌표
 					if interpolated_h < interpolated_y + self.ball_width and interpolated_y < interpolated_h + self.paddle_height: # 패들 옆으로의 충돌
-						angle = max_angle * ((interpolated_y + (self.ball_width / 2)) - (interpolated_h + (self.paddle_height / 2))) / (4.5 * self.paddle_width)
+						angle = max_angle * ((interpolated_y + (self.ball_width / 2)) - (interpolated_h + (self.paddle_height / 2))) / (4.5 * self.paddle_width) # 패들에 충돌된 지점을 반사각도로 변환
 						self.ball_vx = self.ball_speed * math.cos(angle)
 						self.ball_vy = self.ball_speed * math.sin(angle)
-						self.ball_x = left_paddle_line + self.ball_vx * dt
-						self.ball_y = interpolated_y + self.ball_vy * dt
-					elif interpolated_y < interpolated_h: # 패들 위쪽으로 충돌
+						self.ball_x = left_paddle_line + self.ball_vx * dt # 공의 x좌표를 충돌후 흘러간 시간(dt) 만큼 보정
+						self.ball_y = interpolated_y + self.ball_vy * dt # 공의 y좌표를 충돌후 흘러가 시간(dt) 만큼 보정
+					elif interpolated_y < interpolated_h: # 패들 위면으로 충돌
 						self.ball_y = self.paddle_positions["player1"] - self.ball_width
-						if (0 < self.ball_vy):
-							self.ball_vy *= -1
-						else:
-							self.ball_vy -= self.delta_y
+						if (0 < self.ball_vy): 
+							self.ball_vy *= -1 # 위에서 오던 공인 경우 정반사로 계산
+						else: 
+							self.ball_vy -= self.delta_y # 아래서 올라오던 공인 경우에는 약간의 속력(delta_y) 추가
 					elif interpolated_h + self.paddle_height < interpolated_y + self.ball_width: # 패들 밑면으로 충돌
 						self.ball_y = self.paddle_positions["player1"] + self.paddle_height
 						if (self.ball_vy < 0):
-							self.ball_vy *= -1
+							self.ball_vy *= -1 # 아래서 오던 공인 경우 정반사로 계산
 						else:
-							self.ball_vy += self.delta_y
+							self.ball_vy += self.delta_y # 위에서 내려오던 공인 경우에는 약간의 속력(delta_y) 추가
 
 			# 오른쪽 패들에 충돌
-			if self.canvas_width - 5 * self.paddle_width < self.ball_x and self.ball_x < self.canvas_width - 3 * self.paddle_width:
-				# print("오른쪽패들 x 좌표 겹침")
+			if self.canvas_width - 5 * self.paddle_width < self.ball_x and self.ball_x < self.canvas_width - 3 * self.paddle_width: # 패들과 공의 x 좌표의 겹침
 				if self.paddle_positions["player2"] < self.ball_y + self.ball_width and self.paddle_positions["player2"] + self.paddle_height > self.ball_y:  # 패들과 공의 y 좌표의 겹침
-					# print("오른쪽패들 y 좌표 겹침")
-					dt = ((self.ball_x + self.ball_width) - write_paddle_line) / self.ball_vx
-					interpolated_y = self.ball_y - self.ball_vy * dt
-					interpolated_h = self.paddle_positions["player2"] - (self.paddle_positions["player2"] - self.paddle_pre_positions["player2"]) * dt
+					dt = ((self.ball_x + self.ball_width) - write_paddle_line) / self.ball_vx # 계산상 충돌했어야 하는 지점을 넘어선 초과 시간 
+					interpolated_y = self.ball_y - self.ball_vy * dt # 보간법으로 보정된 계산상 충돌했어야 하는 시점에서의 공의 y좌표
+					interpolated_h = self.paddle_positions["player2"] - (self.paddle_positions["player2"] - self.paddle_pre_positions["player2"]) * dt # 보간법으로 보정된 계산상 충돌했어야 하는 시점에서의 공의 y좌표
 					if interpolated_h < interpolated_y + self.ball_width and interpolated_y < interpolated_h + self.paddle_height: # 패들 옆으로의 충돌
-						angle = max_angle * ((interpolated_y + (self.ball_width / 2)) - (interpolated_h + (self.paddle_height / 2))) / (4.5 * self.paddle_width)
+						angle = max_angle * ((interpolated_y + (self.ball_width / 2)) - (interpolated_h + (self.paddle_height / 2))) / (4.5 * self.paddle_width) # 패들에 충돌된 지점을 반사각도로 변환
 						self.ball_vx = self.ball_speed * math.cos(angle + math.pi)
 						self.ball_vy = self.ball_speed * math.sin(angle)
-						self.ball_x = write_paddle_line - self.ball_width + self.ball_vx * dt
-						self.ball_y = interpolated_y + self.ball_vy * dt
+						self.ball_x = write_paddle_line - self.ball_width + self.ball_vx * dt # 공의 x좌표를 충돌후 흘러간 시간(dt) 만큼 보정
+						self.ball_y = interpolated_y + self.ball_vy * dt # 공의 y좌표를 충돌후 흘러가 시간(dt) 만큼 보정
 					elif interpolated_y < interpolated_h: # 패들 위쪽으로 충돌
 						self.ball_y = self.paddle_positions["player2"] - self.ball_width
 						if (0 < self.ball_vy):
-							self.ball_vy *= -1
+							self.ball_vy *= -1 # 위에서 오던 공인 경우 정반사로 계산
 						else:
-							self.ball_vy -= self.delta_y
+							self.ball_vy -= self.delta_y # 아래서 올라오던 공인 경우에는 약간의 속력(delta_y) 추가
 					elif interpolated_h + self.paddle_height < interpolated_y + self.ball_width: # 패들 밑면으로 충돌
 						self.ball_y = self.paddle_positions["player2"] + self.paddle_height
 						if (self.ball_vy < 0):
-							self.ball_vy *= -1
+							self.ball_vy *= -1 # 아래서 오던 공인 경우 정반사로 계산
 						else:
-							self.ball_vy += self.delta_y
+							self.ball_vy += self.delta_y # 위에서 내려오던 공인 경우에는 약간의 속력(delta_y) 추가
 				
 			# player 1 득점
 			if self.ball_x + self.ball_width < 0:
