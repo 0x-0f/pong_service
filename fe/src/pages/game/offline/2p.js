@@ -8,8 +8,9 @@ let keyupHandler;
 let paused = false;
 
 export function render(app, navigate) {
+  
   app.innerHTML = `
-  <canvas id="pongCanvas" width="800px" height="400px" style="border: 1px solid #FFF">
+  <canvas id="pongCanvas" width="800px" height="600px" style="border: 1px solid #FFF">
   Your browser does not support this game.
   </canvas>
   <div class="score-box" style="display: flex; align-items: center; justify-content: center;">
@@ -25,8 +26,8 @@ export function render(app, navigate) {
   mainBtn.classList.add("btn", "btn-warning", "main-btn");
   mainBtn.addEventListener('click', () => {
     cleanup();
-    history.back();
-    // navigate('main');
+    // history.back();
+    navigate('main');
   });
   
   // 버튼을 감싸는 버튼 컨테이너(div) 생성
@@ -43,13 +44,14 @@ export function render(app, navigate) {
   const leftScore = document.getElementById('left-score');
   const rightScore = document.getElementById('right-score');
 
-  const paddleWidth = 10, paddleHeight = 100;
-  const leftPaddle = { x: 0, y: (canvas.height - paddleHeight) / 2 };
-  const rightPaddle = { x: canvas.width - paddleWidth, y: (canvas.height - paddleHeight) / 2 };
+  const paddleWidth = 12, paddleHeight = 8 * paddleWidth;
+  const leftPaddle = { x: 3 * paddleWidth, y: (canvas.height - paddleHeight) / 2, prePos: (canvas.height - paddleHeight) / 2 };
+  const rightPaddle = { x: canvas.width - 4 * paddleWidth, y: (canvas.height - paddleHeight) / 2, prePos: (canvas.height - paddleHeight) / 2 };
 
-  const ballRadius = 10;
-  const ball = { x: canvas.width / 2, y: canvas.height / 2 };
-  const speed = { paddle: 8, ball: { x: 5, y: 5 } };
+//   const ballRadius = 10;
+  const ballWidth = paddleWidth;
+  const ball = { x: (canvas.width - ballWidth) / 2, y: (canvas.height - ballWidth) / 2 };
+  const speed = { paddle: 10, ball: { x: 5, y: 0 } };
 
   let leftPaddleDirection = null, rightPaddleDirection = null;
 
@@ -69,9 +71,7 @@ export function render(app, navigate) {
 
   function drawBall(ball) {
     ctx.fillStyle = '#FFF';
-    ctx.beginPath();
-    ctx.arc(ball.x, ball.y, ballRadius, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillRect(ball.x, ball.y, ballWidth, ballWidth);
   }
 
   function drawPaddle(paddle) {
@@ -79,7 +79,7 @@ export function render(app, navigate) {
     ctx.fillRect(paddle.x, paddle.y, paddleWidth, paddleHeight);
   }
 
-  function movePaddle(left, right) {
+  function movePaddle(left, right) {    
     if (left === 'up' && leftPaddle.y > 0) leftPaddle.y -= speed.paddle;
     if (left === 'down' && leftPaddle.y < canvas.height - paddleHeight) leftPaddle.y += speed.paddle;
     if (right === 'up' && rightPaddle.y > 0) rightPaddle.y -= speed.paddle;
@@ -89,39 +89,110 @@ export function render(app, navigate) {
   function moveBall() {
     ball.x += speed.ball.x;
     ball.y += speed.ball.y;
+    const maxAngle = Math.PI * 8 / 16;
+    //한 프레임 당 움직이는 ball의 거리
+    const ballSpeed = 10;
+    const paddleSpeed = 10;
+    deltaY = paddleSpeed * 0.2;
 
-    // Ball hits the top or bottom wall
-    if (ball.y < ballRadius) {
-      ball.y = ballRadius; // Correct position
-      speed.ball.y = -speed.ball.y; // Reverse direction
-    } else if (ball.y > canvas.height - ballRadius) {
-      ball.y = canvas.height - ballRadius; // Correct position
-      speed.ball.y = -speed.ball.y; // Reverse direction
+    // 천장 충돌
+    if (ball.y <= 0) {
+        speed.ball.y *= -1;
+        ball.y *= -1;
     }
 
-    // Ball hits the left wall
-    if (ball.x - ballRadius <= 0) {
-      if (ball.y >= leftPaddle.y && ball.y <= leftPaddle.y + paddleHeight) {
-        increaseSpeed();
-        reflectBall(ball, leftPaddle, true);
-      } else {
-        rightScore.textContent = +rightScore.textContent + 1;
-        pauseGame(); // Pause the game
-        checkWin("Right");
-      }
+    // 바닥 충돌
+    if (ball.y >= canvas.height - ballWidth) {
+        speed.ball.y *= -1;
+        ball.y -= 2 * ((ball.y + ball.width)- canvas.height); // Correct position
+    }
+    
+    // 왼쪽 패들 충돌
+    if (2 * paddle.width < ball.x && ball.x <= 4 * paddle.width) {
+        if (leftPaddle.y < ball.y + ballWidth && leftPaddle.y + paddleHeight > ball.y) {
+            const leftPaddleLine = 4 * ball.width;
+            // 계산상 원래 공이 충돌해서 반사되어야 할 패들 지점을, 넘어선 시간
+            const dt = (ball.x - leftPaddleLine) / speed.ball.x;
+            //보간법
+            //dt 만큼의 시간(패들의 옆면 x좌표에 공이 도달한 이후의 시간)동안 공과 패들이 이동한 거리를 보간하여, 공이 패들의 옆면에 충돌했는지 알아본다
+            const interpolatedBallPos = ball.y - speed.ball.y * dt;
+            const interpolatedPaddlePos = leftPaddle.y - (leftPaddle.y - leftPaddle.prePos) * dt ;
+            
+            //패들 옆면 충돌 시
+            if (interpolatedPaddlePos < interpolatedBallPos + ballWidth && interpolatedBallPos < interpolatedPaddlePos + paddleHeight) {
+                // 공이 패들의 중앙으로부터 어느지점에 맞았나를 정규화하여 반사각을 결정
+                const angle = maxAngle * ((interpolatedBallPos + (ballWidth / 2)) - (interpolatedPaddlePos + (paddleHeight / 2))) / (4.5 * paddleWidth)
+                speed.ball.x = ballSpeed * Math.cos(angle);
+                speed.ball.y = ballSpeed * Math.sin(angle);
+                // 한 프레임 후의 공의 위치를 보간하여 적용
+                ball.x = leftPaddleLine + speed.ball.x * dt;
+                ball.y = interpolatedBallPos + speed.ball.y * dt;
+            }  else if (interpolatedBallPos < interpolatedPaddlePos) { //패들 위쪽 충돌 시 
+                ball.y = leftPaddle.y - ballWidth;
+                if (0 < speed.ball.y) {
+                    speed.ball.y *= -1; //  위에서 오던공 -> 정반사
+                } else {
+                    speed.ball.y -= deltaY; // 아래서 오던공 -> 약간의 속력을 추가
+                }
+            }  else if (interpolatedPaddlePos + paddleHeight < interpolatedBallPos + ballWidth) { //패들 아래쪽 충돌 시
+                ball.y = leftPaddle.y + paddleHeight;
+                if ( speed.ball.y < 0) {
+                    speed.ball.y *= -1; // 아래에서 오던공 -> 정반사
+                }
+                else {
+                    speed.ball.y += deltaY; // 위에서 오던공 -> 약간의 속력을 추가
+                }
+            }
+
+            
+            //패들 아래쪽 충돌 시
+        }
+    }
+    
+    
+    //오른쪽 패들 충돌
+    const rightPaddleLine = canvas.width - 4 * paddleWidth;
+    if (canvas.width - 5 * paddleWidth < ball.x && ball.x < canvas.width - 3 * paddleWidth) {
+        if (rightPaddle.y < ball.y + ballWidth && rightPaddle.y + paddleHeight > ball. y) {
+            const dt = ((ball.x + ballWidth) - rightPaddleLine) / speed.ball.x;
+            const interpolatedBallPos = ball.y - speed.ball.y * dt;
+            const interpolatedPaddlePos = rightPaddle.y - (rightPaddle.y - rightPaddle.prePos) * dt;
+        }
     }
 
-    // Ball hits the right wall
-    if (ball.x + ballRadius >= canvas.width) {
-      if (ball.y >= rightPaddle.y && ball.y <= rightPaddle.y + paddleHeight) {
-        increaseSpeed();
-        reflectBall(ball, rightPaddle, false);
-      } else {
-        leftScore.textContent = +leftScore.textContent + 1;
-        pauseGame(); // Pause the game
-        checkWin("Left");
-      }
-    }
+
+    // // Ball hits the top or bottom wall
+    // if (ball.y < ballRadius) {
+    //   ball.y = ballRadius; // Correct position
+    //   speed.ball.y = -speed.ball.y; // Reverse direction
+    // } else if (ball.y > canvas.height - ballRadius) {
+    //   ball.y = canvas.height - ballRadius; // Correct position
+    //   speed.ball.y = -speed.ball.y; // Reverse direction
+    // }
+
+    // // Ball hits the left wall
+    // if (ball.x - ballRadius <= 0) {
+    //   if (ball.y >= leftPaddle.y && ball.y <= leftPaddle.y + paddleHeight) {
+    //     increaseSpeed();
+    //     reflectBall(ball, leftPaddle, true);
+    //   } else {
+    //     rightScore.textContent = +rightScore.textContent + 1;
+    //     pauseGame(); // Pause the game
+    //     checkWin("Right");
+    //   }
+    // }
+
+    // // Ball hits the right wall
+    // if (ball.x + ballRadius >= canvas.width) {
+    //   if (ball.y >= rightPaddle.y && ball.y <= rightPaddle.y + paddleHeight) {
+    //     increaseSpeed();
+    //     reflectBall(ball, rightPaddle, false);
+    //   } else {
+    //     leftScore.textContent = +leftScore.textContent + 1;
+    //     pauseGame(); // Pause the game
+    //     checkWin("Left");
+    //   }
+    // }
   }
 
   function pauseGame() {
