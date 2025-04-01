@@ -93,7 +93,7 @@ export function render(app, navigate) {
     //한 프레임 당 움직이는 ball의 거리
     const ballSpeed = 10;
     const paddleSpeed = 10;
-    deltaY = paddleSpeed * 0.2;
+    const deltaY = paddleSpeed * 0.2;
 
     // 천장 충돌
     if (ball.y <= 0) {
@@ -108,7 +108,7 @@ export function render(app, navigate) {
     }
     
     // 왼쪽 패들 충돌
-    if (2 * paddle.width < ball.x && ball.x <= 4 * paddle.width) {
+    if (2 * paddleWidth < ball.x && ball.x <= 4 * paddleWidth) {
         if (leftPaddle.y < ball.y + ballWidth && leftPaddle.y + paddleHeight > ball.y) {
             const leftPaddleLine = 4 * ball.width;
             // 계산상 원래 공이 충돌해서 반사되어야 할 패들 지점을, 넘어선 시간
@@ -121,7 +121,7 @@ export function render(app, navigate) {
             //패들 옆면 충돌 시
             if (interpolatedPaddlePos < interpolatedBallPos + ballWidth && interpolatedBallPos < interpolatedPaddlePos + paddleHeight) {
                 // 공이 패들의 중앙으로부터 어느지점에 맞았나를 정규화하여 반사각을 결정
-                const angle = maxAngle * ((interpolatedBallPos + (ballWidth / 2)) - (interpolatedPaddlePos + (paddleHeight / 2))) / (4.5 * paddleWidth)
+                const angle = maxAngle * ((interpolatedBallPos + (ballWidth / 2)) - (interpolatedPaddlePos + (paddleHeight / 2))) / (4.5 * paddleWidth);
                 speed.ball.x = ballSpeed * Math.cos(angle);
                 speed.ball.y = ballSpeed * Math.sin(angle);
                 // 한 프레임 후의 공의 위치를 보간하여 적용
@@ -143,9 +143,6 @@ export function render(app, navigate) {
                     speed.ball.y += deltaY; // 위에서 오던공 -> 약간의 속력을 추가
                 }
             }
-
-            
-            //패들 아래쪽 충돌 시
         }
     }
     
@@ -157,6 +154,27 @@ export function render(app, navigate) {
             const dt = ((ball.x + ballWidth) - rightPaddleLine) / speed.ball.x;
             const interpolatedBallPos = ball.y - speed.ball.y * dt;
             const interpolatedPaddlePos = rightPaddle.y - (rightPaddle.y - rightPaddle.prePos) * dt;
+            if (interpolatedPaddlePos < interpolatedBallPos + ballWidth && interpolatedBallPos < interpolatedPaddlePos + paddleHeight) {
+                const angle = maxAngle * ((interpolatedBallPos + (ballWidth / 2)) - (interpolatedPaddlePos + (paddleHeight / 2))) / (4.5 * paddleWidth);
+                speed.ball.x = ballSpeed * Math.cos(angle + Math.PI);
+                speed.ball.y = ballSpeed * Math.sin(angle);
+                ball.x = rightPaddleLine - ballWidth + speed.ball.x * dt;
+                ball.y = interpolatedBallPos + speed.ball.y * dt;
+            } else if (interpolatedBallPos < interpolatedPaddlePos) { //패들 위쪽 충돌 시
+                ball.y = rightPaddle.y - ballWidth;
+                if (0 < speed.ball.y) {
+                    speed.ball.y *= -1; //  위에서 오던공 -> 정반사
+                } else {
+                    speed.ball.y -= deltaY; // 아래서 오던공 -> 약간의 속력을 추가
+                }
+            } else if (interpolatedPaddlePos + paddleHeight < interpolatedBallPos + ballWidth) {
+                ball.y = rightPaddle.y + paddleHeight;
+                if (speed.ball.y < 0) {
+                    speed.ball.y *= -1; // 아래에서 오던공 -> 정반사
+                } else {
+                    speed.ball.y += deltaY; // 위에서 오던공 -> 약간의 속력을 추가
+                }
+            }
         }
     }
 
