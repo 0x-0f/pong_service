@@ -80,6 +80,8 @@ export function render(app, navigate) {
   }
 
   function movePaddle(left, right) {    
+      leftPaddle.prePos = leftPaddle.y;
+      rightPaddle.prePos = rightPaddle.y;
     if (left === 'up' && leftPaddle.y > 0) leftPaddle.y -= speed.paddle;
     if (left === 'down' && leftPaddle.y < canvas.height - paddleHeight) leftPaddle.y += speed.paddle;
     if (right === 'up' && rightPaddle.y > 0) rightPaddle.y -= speed.paddle;
@@ -102,15 +104,15 @@ export function render(app, navigate) {
     }
 
     // 바닥 충돌
-    if (ball.y >= canvas.height - ballWidth) {
+    if (ball.y >= 600 - ballWidth) {
         speed.ball.y *= -1;
-        ball.y -= 2 * ((ball.y + ball.width)- canvas.height); // Correct position
+        ball.y -= 2 * ((ball.y + ballWidth) - 600); // Correct position
     }
     
     // 왼쪽 패들 충돌
     if (2 * paddleWidth < ball.x && ball.x <= 4 * paddleWidth) {
         if (leftPaddle.y < ball.y + ballWidth && leftPaddle.y + paddleHeight > ball.y) {
-            const leftPaddleLine = 4 * ball.width;
+            const leftPaddleLine = 4 * ballWidth;
             // 계산상 원래 공이 충돌해서 반사되어야 할 패들 지점을, 넘어선 시간
             const dt = (ball.x - leftPaddleLine) / speed.ball.x;
             //보간법
@@ -122,8 +124,8 @@ export function render(app, navigate) {
             if (interpolatedPaddlePos < interpolatedBallPos + ballWidth && interpolatedBallPos < interpolatedPaddlePos + paddleHeight) {
                 // 공이 패들의 중앙으로부터 어느지점에 맞았나를 정규화하여 반사각을 결정
                 const angle = maxAngle * ((interpolatedBallPos + (ballWidth / 2)) - (interpolatedPaddlePos + (paddleHeight / 2))) / (4.5 * paddleWidth);
-                speed.ball.x = ballSpeed * Math.cos(angle);
-                speed.ball.y = ballSpeed * Math.sin(angle);
+                speed.ball.x = ballSpeed * Math.cos(angle) + (10 * Math.abs(angle) / Math.PI);
+                speed.ball.y = ballSpeed * Math.sin(angle) + (10 * angle / Math.PI);
                 // 한 프레임 후의 공의 위치를 보간하여 적용
                 ball.x = leftPaddleLine + speed.ball.x * dt;
                 ball.y = interpolatedBallPos + speed.ball.y * dt;
@@ -156,8 +158,8 @@ export function render(app, navigate) {
             const interpolatedPaddlePos = rightPaddle.y - (rightPaddle.y - rightPaddle.prePos) * dt;
             if (interpolatedPaddlePos < interpolatedBallPos + ballWidth && interpolatedBallPos < interpolatedPaddlePos + paddleHeight) {
                 const angle = maxAngle * ((interpolatedBallPos + (ballWidth / 2)) - (interpolatedPaddlePos + (paddleHeight / 2))) / (4.5 * paddleWidth);
-                speed.ball.x = ballSpeed * Math.cos(angle + Math.PI);
-                speed.ball.y = ballSpeed * Math.sin(angle);
+                speed.ball.x = ballSpeed * Math.cos(angle + Math.PI) - (10 * Math.abs(angle) / Math.PI);
+                speed.ball.y = ballSpeed * Math.sin(angle) + (10 * angle / Math.PI);
                 ball.x = rightPaddleLine - ballWidth + speed.ball.x * dt;
                 ball.y = interpolatedBallPos + speed.ball.y * dt;
             } else if (interpolatedBallPos < interpolatedPaddlePos) { //패들 위쪽 충돌 시
@@ -188,29 +190,31 @@ export function render(app, navigate) {
     //   speed.ball.y = -speed.ball.y; // Reverse direction
     // }
 
-    // // Ball hits the left wall
-    // if (ball.x - ballRadius <= 0) {
+    // Ball hits the left wall
+    if (ball.x + ballWidth <= 0) {
     //   if (ball.y >= leftPaddle.y && ball.y <= leftPaddle.y + paddleHeight) {
     //     increaseSpeed();
     //     reflectBall(ball, leftPaddle, true);
     //   } else {
-    //     rightScore.textContent = +rightScore.textContent + 1;
-    //     pauseGame(); // Pause the game
-    //     checkWin("Right");
+        rightScore.textContent = +rightScore.textContent + 1;
+        resetGame("Right"); // Reset the game for the next round
+        pauseGame(); // Pause the game
+        checkWin("Right");
     //   }
-    // }
+    }
 
-    // // Ball hits the right wall
-    // if (ball.x + ballRadius >= canvas.width) {
+    // Ball hits the right wall
+    if (ball.x >= canvas.width) {
     //   if (ball.y >= rightPaddle.y && ball.y <= rightPaddle.y + paddleHeight) {
     //     increaseSpeed();
     //     reflectBall(ball, rightPaddle, false);
     //   } else {
-    //     leftScore.textContent = +leftScore.textContent + 1;
-    //     pauseGame(); // Pause the game
-    //     checkWin("Left");
+        leftScore.textContent = +leftScore.textContent + 1;
+        resetGame("Left"); // Reset the game for the next round
+        pauseGame(); // Pause the game
+        checkWin("Left");
     //   }
-    // }
+    }
   }
 
   function pauseGame() {
@@ -222,7 +226,6 @@ export function render(app, navigate) {
     if (e.key === ' ') {
       paused = false; // Clear paused state
       window.removeEventListener('keydown', resumeGameOnce); // Remove the resume listener
-      resetGame(); // Reset the game for the next round
     }
   }
 
@@ -255,13 +258,13 @@ export function render(app, navigate) {
     }
   }
 
-  function resetGame() {
+  function resetGame(winner) {
     ball.x = canvas.width / 2;
     ball.y = canvas.height / 2;
     leftPaddle.y = (canvas.height - paddleHeight) / 2;
     rightPaddle.y = (canvas.height - paddleHeight) / 2;
-    speed.ball.x = Math.random() < 0.5 ? -5 : 5;
-    speed.ball.y = Math.random() < 0.5 ? -5 : 5;
+    speed.ball.x = (winner === "Right")? (-5):(5);
+    speed.ball.y = 0;
   }
 
   keydownHandler = (e) => {
